@@ -636,6 +636,12 @@
                 <div className="space-y-3">
                   <button
                     className="w-full bg-gray-700 hover:bg-gray-600 text-white py-4 rounded-xl font-medium transition-colors active:opacity-70"
+                    onClick={() => handlePopupOption('チェックリスト')}
+                  >
+                    チェックリスト
+                  </button>
+                  <button
+                    className="w-full bg-gray-700 hover:bg-gray-600 text-white py-4 rounded-xl font-medium transition-colors active:opacity-70"
                     onClick={() => handlePopupOption('スワイプ選択')}
                   >
                     スワイプ選択
@@ -645,6 +651,12 @@
                     onClick={() => handlePopupOption('全て正常')}
                   >
                     全て正常
+                  </button>
+                  <button
+                    className="w-full bg-gray-600 hover:bg-gray-500 text-white py-3 rounded-xl font-medium transition-colors active:opacity-70 mt-2"
+                    onClick={() => setShowPopup(false)}
+                  >
+                    キャンセル
                   </button>
                 </div>
               </div>
@@ -657,10 +669,4 @@
     ReactDOM.render(<WelcomePage />, document.getElementById('app'));
   </script>
 </body>
-</html>bg-gray-600 text-white py-4 rounded-xl font-medium transition-colors active:opacity-70"
-                    onClick={() => handlePopupOption('チェックリスト')}
-                  >
-                    チェックリスト
-                  </button>
-                  <button
-                    className="w-full bg-gray-700 hover:
+</html>
