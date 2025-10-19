@@ -2,10 +2,21 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>車両点検アプリ</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    html {
+      height: 100%;
+      overflow: hidden;
+    }
+    
     body {
       margin: 0;
       padding: 0;
@@ -13,18 +24,23 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
+      /* iOS Safe Area対応 */
+      padding-bottom: env(safe-area-inset-bottom);
     }
-    html {
-      overflow: hidden;
-      height: 100%;
-    }
+    
     #app {
       height: 100%;
       overflow: hidden;
     }
+    
     /* iOS Safari対応 */
     body {
       -webkit-overflow-scrolling: touch;
+    }
+    
+    /* DOCKをセーフエリアの上に配置 */
+    .dock-container {
+      padding-bottom: calc(2rem + env(safe-area-inset-bottom));
     }
   </style>
 </head>
@@ -269,8 +285,8 @@
             </div>
           </div>
 
-          <div className="flex-1 px-6 py-4 overflow-y-auto" style={{paddingBottom: multiSelectMode && selectedVehicles.length > 0 ? '180px' : '140px'}}>
-            <div className="grid grid-cols-3 gap-6 max-w-md mx-auto pb-8">
+          <div className="flex-1 px-6 py-4 overflow-y-auto">
+            <div className="grid grid-cols-3 gap-6 max-w-md mx-auto" style={{paddingBottom: multiSelectMode && selectedVehicles.length > 0 ? '220px' : '180px'}}>
               {vehicles.map((vehicle) => {
                 const isSelected = selectedVehicles.includes(vehicle.id);
                 const VehicleIcon = vehicle.type === 'truck' ? Truck : vehicle.type === 'van' ? VanIcon : Car;
@@ -300,7 +316,7 @@
             </div>
           </div>
 
-          <div className="flex-shrink-0 fixed bottom-0 left-0 right-0 pb-8 px-6 safe-area-bottom">
+          <div className="flex-shrink-0 fixed bottom-0 left-0 right-0 dock-container px-6">
             <div className="bg-white/20 backdrop-blur-xl rounded-3xl py-4 px-6 max-w-md mx-auto">
               {multiSelectMode && selectedVehicles.length > 0 ? (
                 <div className="flex flex-col gap-3">
@@ -311,7 +327,7 @@
                     <div className="flex items-center gap-12">
                       <button
                         className="p-3 hover:bg-white/10 rounded-xl transition-colors active:opacity-70"
-                        onClick={() => alert('前の画面へ')}
+                        onClick={() => setCurrentPage('home')}
                       >
                         <ChevronLeft className="text-white" size={28} />
                       </button>
@@ -334,7 +350,7 @@
                 <div className="flex justify-center items-center relative">
                   <button
                     className="absolute left-12 p-3 hover:bg-white/10 rounded-xl transition-colors active:opacity-70"
-                    onClick={() => alert('前の画面へ')}
+                    onClick={() => setCurrentPage('home')}
                   >
                     <ChevronLeft className="text-white" size={28} />
                   </button>
