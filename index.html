@@ -165,6 +165,7 @@
       const [popupVehicles, setPopupVehicles] = useState([]);
       const [hasVisitedNext, setHasVisitedNext] = useState(false);
       const [checklistData, setChecklistData] = useState({});
+      const [currentVehicleId, setCurrentVehicleId] = useState(null);
       const [currentVehicleName, setCurrentVehicleName] = useState('');
 
       useEffect(() => {
@@ -291,8 +292,10 @@
 
       const handlePopupOption = (option) => {
         if (option === 'チェックリスト') {
-          const vehicleNames = popupVehicles.map(id => vehicles.find(v => v.id === id).name).join(', ');
-          setCurrentVehicleName(vehicleNames);
+          const firstVehicleId = popupVehicles[0];
+          const vehicle = vehicles.find(v => v.id === firstVehicleId);
+          setCurrentVehicleId(firstVehicleId);
+          setCurrentVehicleName(vehicle.name);
           setCurrentPage('checklist');
           setShowPopup(false);
         } else {
@@ -306,7 +309,10 @@
         const key = `${sectionTitle}-${itemName}`;
         setChecklistData(prev => ({
           ...prev,
-          [key]: { status, note: prev[key]?.note || '' }
+          [currentVehicleId]: {
+            ...prev[currentVehicleId],
+            [key]: { status, note: prev[currentVehicleId]?.[key]?.note || '' }
+          }
         }));
       };
 
@@ -314,15 +320,32 @@
         const key = `${sectionTitle}-${itemName}`;
         setChecklistData(prev => ({
           ...prev,
-          [key]: { ...prev[key], note }
+          [currentVehicleId]: {
+            ...prev[currentVehicleId],
+            [key]: { ...prev[currentVehicleId]?.[key], note }
+          }
         }));
       };
 
       const handleFreeInputChange = (value) => {
         setChecklistData(prev => ({
           ...prev,
-          'freeInput': { status: 'input', note: value }
+          [currentVehicleId]: {
+            ...prev[currentVehicleId],
+            'freeInput': { status: 'input', note: value }
+          }
         }));
+      };
+
+      const handleSaveChecklist = () => {
+        const vehicleData = checklistData[currentVehicleId] || {};
+        console.log('保存されたデータ:', {
+          vehicleId: currentVehicleId,
+          vehicleName: currentVehicleName,
+          data: vehicleData
+        });
+        alert(`車両 ${currentVehicleName} の点検データを保存しました！`);
+        setCurrentPage('vehicle-select');
       };
 
       const apps = [
@@ -394,7 +417,7 @@
                   <div className="space-y-3">
                     {section.items.map((item, itemIndex) => {
                       const key = `${section.title}-${item}`;
-                      const itemData = checklistData[key] || {};
+                      const itemData = checklistData[currentVehicleId]?.[key] || {};
                       const isGood = itemData.status === 'good';
                       const isBad = itemData.status === 'bad';
 
@@ -443,7 +466,7 @@
                       <div>
                         <div className="text-white text-sm mb-2">自由入力</div>
                         <textarea
-                          value={checklistData['freeInput']?.note || ''}
+                          value={checklistData[currentVehicleId]?.['freeInput']?.note || ''}
                           onChange={(e) => handleFreeInputChange(e.target.value)}
                           placeholder="その他の気づき事項を入力してください"
                           className="w-full bg-gray-700 text-white rounded-lg p-3 text-sm resize-none"
@@ -454,6 +477,15 @@
                   </div>
                 </div>
               ))}
+              
+              <div className="mb-6">
+                <button
+                  onClick={handleSaveChecklist}
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-semibold transition-colors active:opacity-70"
+                >
+                  この内容で保存
+                </button>
+              </div>
             </div>
 
             <div className="vehicle-dock">
