@@ -12,35 +12,34 @@
       box-sizing: border-box;
     }
     
-    html {
-      height: 100%;
-      overflow: hidden;
-    }
-    
-    body {
+    html, body {
       margin: 0;
       padding: 0;
-      position: fixed;
       width: 100%;
-      height: 100%;
+      height: 100vh;
+      height: 100dvh; /* 動的ビューポート高さ */
       overflow: hidden;
-      /* iOS Safe Area対応 */
-      padding-bottom: env(safe-area-inset-bottom);
+      position: fixed;
     }
     
     #app {
+      width: 100%;
       height: 100%;
-      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
     
-    /* iOS Safari対応 */
-    body {
+    /* スクロール可能領域 */
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
     
-    /* DOCKをセーフエリアの上に配置 */
-    .dock-container {
-      padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+    /* フッター固定 */
+    .fixed-footer {
+      flex-shrink: 0;
+      background: #1f2937;
     }
   </style>
 </head>
