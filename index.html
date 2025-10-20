@@ -89,7 +89,7 @@
     // ========================================
     // 🔧 ここにGoogleスプレッドシートのウェブアプリURLを貼り付けてください
     // ========================================
-    const SPREADSHEET_URL = 'ここにあなたのウェブアプリURLを貼り付け';
+    const SPREADSHEET_URL = 'https://script.google.com/macros/s/AKfycbxHvS5v8g-fnJNHUltmo4AE65lRYQUF20JJBP9P9vz4ZH_PdQ94Kp91ve2pVt2R7cJB/exec';
     // ========================================
 
     const ClipboardCheck = ({ size = 24, className = "" }) => (
@@ -214,21 +214,26 @@
         updateDate();
         const interval = setInterval(updateDate, 60000);
 
-        // 完了済み車両情報を読み込み（月が変わったらリセット）
-        const savedData = localStorage.getItem('completedVehicles');
-        if (savedData) {
-          try {
+        // 完了済み車両情報を読み込み
+        try {
+          const savedData = localStorage.getItem('completedVehicles');
+          if (savedData) {
             const parsed = JSON.parse(savedData);
             const currentMonth = new Date().getMonth();
-            if (parsed.month === currentMonth) {
+            const currentYear = new Date().getFullYear();
+            
+            // 月または年が変わったらリセット
+            if (parsed.month === currentMonth && parsed.year === currentYear) {
               setCompletedVehicles(parsed.vehicles || {});
             } else {
               // 月が変わったらリセット
               localStorage.removeItem('completedVehicles');
+              setCompletedVehicles({});
             }
-          } catch (e) {
-            console.error('データ読み込みエラー:', e);
           }
+        } catch (e) {
+          console.error('データ読み込みエラー:', e);
+          localStorage.removeItem('completedVehicles');
         }
 
         return () => clearInterval(interval);
@@ -432,7 +437,7 @@
 
         try {
           // Googleスプレッドシートに送信
-          const response = await fetch(SPREADSHEET_URL, {
+          await fetch(SPREADSHEET_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: {
@@ -444,18 +449,23 @@
           console.log('保存されたデータ:', payload);
           
           // 完了車両として記録
-          const currentMonth = new Date().getMonth();
+          const now = new Date();
           const newCompleted = {
             ...completedVehicles,
-            [currentVehicleId]: new Date().toISOString()
+            [currentVehicleId]: now.toISOString()
           };
           setCompletedVehicles(newCompleted);
           
-          // localStorageに保存（月情報も含める）
-          localStorage.setItem('completedVehicles', JSON.stringify({
-            month: currentMonth,
-            vehicles: newCompleted
-          }));
+          // localStorageに保存（年月情報も含める）
+          try {
+            localStorage.setItem('completedVehicles', JSON.stringify({
+              year: now.getFullYear(),
+              month: now.getMonth(),
+              vehicles: newCompleted
+            }));
+          } catch (storageError) {
+            console.warn('localStorage保存エラー:', storageError);
+          }
           
           // チェックリストデータをリセット
           setChecklistData(prev => {
@@ -469,7 +479,7 @@
           navigateToPage('vehicle-select');
         } catch (error) {
           console.error('保存エラー:', error);
-          alert('⚠️ データの保存中にエラーが発生しました。\n' + error.message);
+          alert('⚠️ データの保存中にエラーが発生しました。\nネットワーク接続を確認してください。');
         } finally {
           setIsSaving(false);
         }
@@ -616,6 +626,36 @@
               </div>
             </div>
 
+            <div className="vehicle-dock">
+              <div className="bg-white/20 backdrop-blur-xl rounded-3xl py-4 px-6 max-w-md mx-auto">
+                <div className="flex justify-center items-center">
+                  <div className="flex items-center gap-12">
+                    <button
+                      className="p-3 hover:bg-white/10 rounded-xl transition-colors active:opacity-70"
+                      onClick={navigateBack}
+                    >
+                      <ChevronLeft className="text-white" size={28} />
+                    </button>
+                    <button
+                      className="p-3 hover:bg-white/10 rounded-xl transition-colors active:opacity-70"
+                      onClick={() => navigateToPage('home')}
+                    >
+                      <Home className="text-white" size={28} />
+                    </button>
+                    <button
+                      className="p-4 bg-blue-500 hover:bg-blue-600 rounded-xl transition-colors active:opacity-70"
+                      onClick={() => {
+                        alert('点検完了！');
+                        navigateToPage('vehicle-select');
+                      }}
+                    >
+                      <ChevronRight className="text-white" size={28} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {showSaveConfirm && (
               <div
                 className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-6"
@@ -652,37 +692,6 @@
                 </div>
               </div>
             )}
-            </div>
-
-            <div className="vehicle-dock">
-              <div className="bg-white/20 backdrop-blur-xl rounded-3xl py-4 px-6 max-w-md mx-auto">
-                <div className="flex justify-center items-center">
-                  <div className="flex items-center gap-12">
-                    <button
-                      className="p-3 hover:bg-white/10 rounded-xl transition-colors active:opacity-70"
-                      onClick={navigateBack}
-                    >
-                      <ChevronLeft className="text-white" size={28} />
-                    </button>
-                    <button
-                      className="p-3 hover:bg-white/10 rounded-xl transition-colors active:opacity-70"
-                      onClick={() => navigateToPage('home')}
-                    >
-                      <Home className="text-white" size={28} />
-                    </button>
-                    <button
-                      className="p-4 bg-blue-500 hover:bg-blue-600 rounded-xl transition-colors active:opacity-70"
-                      onClick={() => {
-                        alert('点検完了！');
-                        navigateToPage('vehicle-select');
-                      }}
-                    >
-                      <ChevronRight className="text-white" size={28} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         );
       }
