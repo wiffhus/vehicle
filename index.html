@@ -86,6 +86,12 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
+    // ========================================
+    // 🔧 ここにGoogleスプレッドシートのウェブアプリURLを貼り付けてください
+    // ========================================
+    const SPREADSHEET_URL = 'https://script.google.com/macros/s/AKfycbxHvS5v8g-fnJNHUltmo4AE65lRYQUF20JJBP9P9vz4ZH_PdQ94Kp91ve2pVt2R7cJB/exec';
+    // ========================================
+
     const ClipboardCheck = ({ size = 24, className = "" }) => (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
@@ -389,15 +395,36 @@
         }));
       };
 
-      const handleSaveChecklist = () => {
+      const handleSaveChecklist = async () => {
         const vehicleData = checklistData[currentVehicleId] || {};
-        console.log('保存されたデータ:', {
+        
+        // スプレッドシートに送信するデータを準備
+        const payload = {
           vehicleId: currentVehicleId,
           vehicleName: currentVehicleName,
-          data: vehicleData
-        });
-        alert(`車両 ${currentVehicleName} の点検データを保存しました！`);
-        navigateToPage('vehicle-select');
+          vehicleType: vehicles.find(v => v.id === currentVehicleId)?.type || 'unknown',
+          timestamp: new Date().toISOString(),
+          checklistData: vehicleData
+        };
+
+        try {
+          // Googleスプレッドシートに送信
+          const response = await fetch(SPREADSHEET_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+          });
+
+          console.log('保存されたデータ:', payload);
+          alert(`車両 ${currentVehicleName} の点検データをスプレッドシートに保存しました！`);
+          navigateToPage('vehicle-select');
+        } catch (error) {
+          console.error('保存エラー:', error);
+          alert('データの保存中にエラーが発生しました。\n' + error.message);
+        }
       };
 
       const apps = [
