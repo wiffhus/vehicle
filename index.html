@@ -68,7 +68,7 @@
     }
     
     .scroll-padding-vehicle {
-      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 200px);
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 160px);
     }
     
     .scroll-padding-checklist {
@@ -595,8 +595,8 @@
             </div>
           </div>
 
-          <div className="flex-1 px-6 py-2 overflow-y-auto scroll-padding-vehicle">
-            <div className="grid grid-cols-3 gap-4 max-w-md mx-auto pb-4">
+          <div className="flex-1 px-6 py-2 overflow-y-auto scroll-area">
+            <div className="grid grid-cols-3 gap-4 max-w-md mx-auto pb-48">
               {vehicles.map((vehicle) => {
                 const isSelected = selectedVehicles.includes(vehicle.id);
                 const VehicleIcon = vehicle.type === 'truck' ? Truck : vehicle.type === 'van' ? VanIcon : Car;
