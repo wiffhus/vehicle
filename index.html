@@ -89,7 +89,7 @@
     // ========================================
     // 🔧 ここにGoogleスプレッドシートのウェブアプリURLを貼り付けてください
     // ========================================
-    const SPREADSHEET_URL = 'https://script.google.com/macros/s/AKfycbxHvS5v8g-fnJNHUltmo4AE65lRYQUF20JJBP9P9vz4ZH_PdQ94Kp91ve2pVt2R7cJB/exec';
+    const SPREADSHEET_URL = 'ここにあなたのウェブアプリURLを貼り付け';
     // ========================================
 
     const ClipboardCheck = ({ size = 24, className = "" }) => (
@@ -198,6 +198,9 @@
       const [checklistData, setChecklistData] = useState({});
       const [currentVehicleId, setCurrentVehicleId] = useState(null);
       const [currentVehicleName, setCurrentVehicleName] = useState('');
+      const [completedVehicles, setCompletedVehicles] = useState({});
+      const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+      const [isSaving, setIsSaving] = useState(false);
 
       useEffect(() => {
         const updateDate = () => {
@@ -210,6 +213,23 @@
 
         updateDate();
         const interval = setInterval(updateDate, 60000);
+
+        // 完了済み車両情報を読み込み（月が変わったらリセット）
+        const savedData = localStorage.getItem('completedVehicles');
+        if (savedData) {
+          try {
+            const parsed = JSON.parse(savedData);
+            const currentMonth = new Date().getMonth();
+            if (parsed.month === currentMonth) {
+              setCompletedVehicles(parsed.vehicles || {});
+            } else {
+              // 月が変わったらリセット
+              localStorage.removeItem('completedVehicles');
+            }
+          } catch (e) {
+            console.error('データ読み込みエラー:', e);
+          }
+        }
 
         return () => clearInterval(interval);
       }, []);
@@ -396,6 +416,9 @@
       };
 
       const handleSaveChecklist = async () => {
+        if (isSaving) return;
+        
+        setIsSaving(true);
         const vehicleData = checklistData[currentVehicleId] || {};
         
         // スプレッドシートに送信するデータを準備
@@ -419,12 +442,41 @@
           });
 
           console.log('保存されたデータ:', payload);
-          alert(`車両 ${currentVehicleName} の点検データをスプレッドシートに保存しました！`);
+          
+          // 完了車両として記録
+          const currentMonth = new Date().getMonth();
+          const newCompleted = {
+            ...completedVehicles,
+            [currentVehicleId]: new Date().toISOString()
+          };
+          setCompletedVehicles(newCompleted);
+          
+          // localStorageに保存（月情報も含める）
+          localStorage.setItem('completedVehicles', JSON.stringify({
+            month: currentMonth,
+            vehicles: newCompleted
+          }));
+          
+          // チェックリストデータをリセット
+          setChecklistData(prev => {
+            const newData = { ...prev };
+            delete newData[currentVehicleId];
+            return newData;
+          });
+          
+          setShowSaveConfirm(false);
+          alert(`✅ 車両 ${currentVehicleName} の点検データを保存しました！`);
           navigateToPage('vehicle-select');
         } catch (error) {
           console.error('保存エラー:', error);
-          alert('データの保存中にエラーが発生しました。\n' + error.message);
+          alert('⚠️ データの保存中にエラーが発生しました。\n' + error.message);
+        } finally {
+          setIsSaving(false);
         }
+      };
+
+      const handleSaveClick = () => {
+        setShowSaveConfirm(true);
       };
 
       const apps = [
@@ -556,12 +608,50 @@
               
               <div className="mb-6">
                 <button
-                  onClick={handleSaveChecklist}
+                  onClick={handleSaveClick}
                   className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-semibold transition-colors active:opacity-70"
                 >
                   この内容で保存
                 </button>
               </div>
+            </div>
+
+            {showSaveConfirm && (
+              <div
+                className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-6"
+                onClick={() => !isSaving && setShowSaveConfirm(false)}
+              >
+                <div
+                  className="bg-gray-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 className="text-white text-xl font-semibold mb-4 text-center">
+                    保存確認
+                  </h3>
+                  <p className="text-white text-center mb-6">
+                    車両 <span className="font-bold text-blue-400">{currentVehicleName}</span> の点検内容を保存しますか？
+                  </p>
+                  <div className="space-y-3">
+                    <button
+                      className={`w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-medium transition-colors ${
+                        isSaving ? 'opacity-50 cursor-not-allowed' : 'active:opacity-70'
+                      }`}
+                      onClick={handleSaveChecklist}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? '保存中...' : '保存する'}
+                    </button>
+                    <button
+                      className="w-full bg-gray-600 hover:bg-gray-500 text-white py-3 rounded-xl font-medium transition-colors active:opacity-70"
+                      onClick={() => setShowSaveConfirm(false)}
+                      disabled={isSaving}
+                    >
+                      キャンセル
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             </div>
 
             <div className="vehicle-dock">
@@ -636,6 +726,7 @@
             <div className="grid grid-cols-3 gap-4 max-w-md mx-auto pb-48">
               {vehicles.map((vehicle) => {
                 const isSelected = selectedVehicles.includes(vehicle.id);
+                const isCompleted = completedVehicles[vehicle.id];
                 const VehicleIcon = vehicle.type === 'truck' ? Truck : vehicle.type === 'van' ? VanIcon : Car;
                 return (
                   <button
@@ -646,15 +737,22 @@
                     onClick={() => handleVehicleClick(vehicle.id)}
                   >
                     <div
-                      className={`rounded-2xl w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shadow-lg transition-colors ${
+                      className={`rounded-2xl w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shadow-lg transition-colors relative ${
                         isSelected
                           ? 'bg-blue-500 ring-4 ring-blue-300'
+                          : isCompleted
+                          ? 'bg-gray-600 opacity-50'
                           : 'bg-gray-700'
                       }`}
                     >
                       <VehicleIcon className="text-white" size={36} />
+                      {isCompleted && (
+                        <div className="absolute top-0 right-0 bg-green-500 rounded-full w-5 h-5 flex items-center justify-center text-white text-xs font-bold">
+                          ✓
+                        </div>
+                      )}
                     </div>
-                    <span className="text-white text-sm font-medium text-center">
+                    <span className={`text-white text-sm font-medium text-center ${isCompleted ? 'opacity-50' : ''}`}>
                       {vehicle.name}
                     </span>
                   </button>
