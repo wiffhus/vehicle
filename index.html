@@ -7,8 +7,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>車両点検アプリ</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -539,75 +537,141 @@
       const handleSaveChecklist = async () => {
         if (isSaving) return;
         
+        // URLチェック
+        if (!SPREADSHEET_URL || SPREADSHEET_URL === 'ここにあなたのウェブアプリURLを貼り付け') {
+          alert('⚠️ エラー: GoogleスプレッドシートのURLが設定されていません。\n\nHTMLファイルの最上部にある\nSPREADSHEET_URL = "..."\nの部分に、GASのウェブアプリURLを貼り付けてください。');
+          return;
+        }
+        
         setIsSaving(true);
         const vehicleData = checklistData[currentVehicleId] || {};
         const vehicle = vehicles.find(v => v.id === currentVehicleId);
         
         try {
-          // Spreadsheetへの保存
-          if (selectedFormats.includes('spreadsheet')) {
-            const payload = {
-              vehicleId: currentVehicleId,
-              vehicleName: currentVehicleName,
-              vehicleType: vehicle.type,
-              timestamp: new Date().toISOString(),
-              checklistData: vehicleData
-            };
-
-            await fetch(SPREADSHEET_URL, {
-              method: 'POST',
-              mode: 'no-cors',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            });
-          }
-
-          // EXCEL出力
-          if (selectedFormats.includes('excel')) {
-            generateExcel(vehicleData, currentVehicleName, vehicle.type);
-          }
-
-          // PDF出力
-          if (selectedFormats.includes('pdf')) {
-            generatePDF(vehicleData, currentVehicleName, vehicle.type);
-          }
-
-          // 完了車両として記録
-          const now = new Date();
-          const newCompleted = {
-            ...completedVehicles,
-            [currentVehicleId]: now.toISOString()
-          };
-          setCompletedVehicles(newCompleted);
-          
-          try {
-            localStorage.setItem('completedVehicles', JSON.stringify({
-              year: now.getFullYear(),
-              month: now.getMonth(),
-              vehicles: newCompleted
-            }));
-          } catch (storageError) {
-            console.warn('localStorage保存エラー:', storageError);
-          }
-          
-          setChecklistData(prev => {
-            const newData = { ...prev };
-            delete newData[currentVehicleId];
-            return newData;
+          console.log('保存開始:', {
+            vehicleId: currentVehicleId,
+            vehicleName: currentVehicleName,
+            formats: selectedFormats
           });
           
-          setShowSaveOptions(false);
+          // エクスポート形式リストを作成
+          const exportFormats = [...selectedFormats];
           
-          const formatsList = [];
-          if (selectedFormats.includes('spreadsheet')) formatsList.push('スプレッドシート');
-          if (selectedFormats.includes('excel')) formatsList.push('EXCEL');
-          if (selectedFormats.includes('pdf')) formatsList.push('PDF');
+          const payload = {
+            vehicleId: currentVehicleId,
+            vehicleName: currentVehicleName,
+            vehicleType: vehicle.type,
+            timestamp: new Date().toISOString(),
+            checklistData: vehicleData,
+            exportFormats: exportFormats
+          };
+
+          console.log('送信データ:', payload);
+
+          const response = await fetch(SPREADSHEET_URL, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload),
+            redirect: 'follow'
+          });
+
+          console.log('レスポンス受信:', response);
+
+          // レスポンスの処理
+          let result;
+          try {
+            const text = await response.text();
+            console.log('レスポンステキスト:', text);
+            result = JSON.parse(text);
+          } catch (parseError) {
+            console.error('JSON解析エラー:', parseError);
+            throw new Error('サーバーからの応答が正しくありません。GASのデプロイを確認してください。');
+          }
           
-          alert(`✅ 車両 ${currentVehicleName} の点検データを保存しました！\n保存形式: ${formatsList.join(', ')}`);
-          navigateToPage('vehicle-select');
+          console.log('解析結果:', result);
+          
+          if (result.status === 'success') {
+            // Excel/PDFのダウンロードリンクがあれば表示
+            let downloadMessage = '';
+            if (result.exports) {
+              if (result.exports.excelUrl) {
+                downloadMessage += `\n\n📗 Excel: クリックしてダウンロード`;
+                setTimeout(() => window.open(result.exports.excelUrl, '_blank'), 500);
+              }
+              if (result.exports.pdfUrl) {
+                downloadMessage += `\n📕 PDF: クリックしてダウンロード`;
+                setTimeout(() => window.open(result.exports.pdfUrl, '_blank'), 1000);
+              }
+            }
+
+            
+            // 完了車両として記録
+            const now = new Date();
+            const newCompleted = {
+              ...completedVehicles,
+              [currentVehicleId]: now.toISOString()
+            };
+            setCompletedVehicles(newCompleted);
+            
+            try {
+              localStorage.setItem('completedVehicles', JSON.stringify({
+                year: now.getFullYear(),
+                month: now.getMonth(),
+                vehicles: newCompleted
+              }));
+            } catch (storageError) {
+              console.warn('localStorage保存エラー:', storageError);
+            }
+            
+            setChecklistData(prev => {
+              const newData = { ...prev };
+              delete newData[currentVehicleId];
+              return newData;
+            });
+            
+            setShowSaveOptions(false);
+            
+            const formatsList = [];
+            if (selectedFormats.includes('spreadsheet')) formatsList.push('📊 スプレッドシート');
+            if (selectedFormats.includes('excel')) formatsList.push('📗 EXCEL');
+            if (selectedFormats.includes('pdf')) formatsList.push('📕 PDF');
+            
+            alert(`✅ 車両 ${currentVehicleName} の点検データを保存しました！\n\n保存形式: ${formatsList.join(', ')}${downloadMessage}\n\n※ ポップアップブロックを許可してください`);
+            navigateToPage('vehicle-select');
+          } else {
+            throw new Error(result.message || '保存に失敗しました');
+          }
         } catch (error) {
           console.error('保存エラー:', error);
-          alert('⚠️ データの保存中にエラーが発生しました。\nネットワーク接続を確認してください。');
+          console.error('エラー詳細:', {
+            message: error.message,
+            stack: error.stack,
+            url: SPREADSHEET_URL
+          });
+          
+          let errorMessage = '⚠️ データの保存中にエラーが発生しました。\n\n';
+          
+          if (error.message.includes('fetch')) {
+            errorMessage += '【ネットワークエラー】\n' +
+                          '・インターネット接続を確認してください\n' +
+                          '・GASのウェブアプリURLが正しいか確認してください\n' +
+                          '・GASが「全員」にアクセス許可されているか確認してください';
+          } else if (error.message.includes('JSON')) {
+            errorMessage += '【GASエラー】\n' +
+                          '・GASのコードが正しく保存されているか確認してください\n' +
+                          '・GASの実行ログでエラーを確認してください';
+          } else {
+            errorMessage += 'エラー: ' + error.message + '\n\n' +
+                          '【確認事項】\n' +
+                          '1. GASのウェブアプリURLが正しく設定されているか\n' +
+                          '2. GASが最新のコードでデプロイされているか\n' +
+                          '3. GASの権限が「全員」になっているか\n' +
+                          '4. ブラウザのコンソール(F12)でエラー詳細を確認';
+          }
+          
+          alert(errorMessage);
         } finally {
           setIsSaving(false);
         }
