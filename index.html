@@ -664,8 +664,8 @@
       const addNewDateTab = () => {
         const newTab = {
           id: Date.now(),
-          date: new Date(),
-          label: formatDateShort(new Date())
+          date: null,
+          label: '日付未設定'
         };
         setDateTabs(prev => [...prev, newTab]);
         setActiveTabId(newTab.id);
