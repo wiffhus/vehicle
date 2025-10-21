@@ -210,6 +210,8 @@
       const [showSaveOptions, setShowSaveOptions] = useState(false);
       const [selectedFormats, setSelectedFormats] = useState(['spreadsheet']);
       const [isSaving, setIsSaving] = useState(false);
+      const [dateTabs, setDateTabs] = useState([new Date()]);
+      const [activeTabIndex, setActiveTabIndex] = useState(0);
 
       useEffect(() => {
         const updateDate = () => {
