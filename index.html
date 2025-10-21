@@ -74,6 +74,101 @@
     .scroll-padding-checklist {
       padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 140px);
     }
+    
+    .date-tabs {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding: 0.5rem 0;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: #4B5563 #1F2937;
+    }
+    
+    .date-tabs::-webkit-scrollbar {
+      height: 6px;
+    }
+    
+    .date-tabs::-webkit-scrollbar-track {
+      background: #1F2937;
+      border-radius: 3px;
+    }
+    
+    .date-tabs::-webkit-scrollbar-thumb {
+      background: #4B5563;
+      border-radius: 3px;
+    }
+    
+    .date-tab {
+      flex-shrink: 0;
+      padding: 0.5rem 1rem;
+      background: #374151;
+      border-radius: 0.5rem;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .date-tab.active {
+      background: #475569;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .date-tab:hover {
+      background: #4B5563;
+    }
+    
+    .date-tab-close {
+      margin-left: 0.5rem;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    
+    .date-tab-close:hover {
+      background: rgba(239, 68, 68, 0.5);
+    }
+    
+    .add-date-tab {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #374151;
+      border-radius: 0.5rem;
+      color: white;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    
+    .add-date-tab:hover {
+      background: #4B5563;
+    }
+    
+    input[type="date"] {
+      background: #374151;
+      color: white;
+      border: 1px solid #4B5563;
+      border-radius: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+    }
+    
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -194,6 +289,20 @@
       </svg>
     );
 
+    const Plus = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <line x1="12" x2="12" y1="5" y2="19" />
+        <line x1="5" x2="19" y1="12" y2="12" />
+      </svg>
+    );
+
+    const X = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <line x1="18" x2="6" y1="6" y2="18" />
+        <line x1="6" x2="18" y1="6" y2="18" />
+      </svg>
+    );
+
     function WelcomePage() {
       const [currentDate, setCurrentDate] = useState('');
       const [currentPage, setCurrentPage] = useState('home');
@@ -210,7 +319,7 @@
       const [showSaveOptions, setShowSaveOptions] = useState(false);
       const [selectedFormats, setSelectedFormats] = useState(['spreadsheet']);
       const [isSaving, setIsSaving] = useState(false);
-      const [dateTabs, setDateTabs] = useState([new Date()]);
+      const [dateTabs, setDateTabs] = useState([]);
       const [activeTabIndex, setActiveTabIndex] = useState(0);
 
       useEffect(() => {
@@ -224,6 +333,10 @@
 
         updateDate();
         const interval = setInterval(updateDate, 60000);
+
+        // 初期の日付タブを設定
+        const today = new Date().toISOString().split('T')[0];
+        setDateTabs([today]);
 
         try {
           const savedData = localStorage.getItem('completedVehicles');
@@ -342,198 +455,75 @@
         }
       ];
 
-      // EXCEL生成関数
-      const generateExcel = (vehicleData, vehicleName, vehicleType) => {
-        const wb = XLSX.utils.book_new();
-        const wsData = [];
-
-        const now = new Date();
-        const month = now.getMonth() + 1;
-        const date = now.getDate();
-        const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
-        const dateStr = `${month}月${date}日(${dayOfWeek})`;
-        const currentYear = now.getFullYear();
-
-        const getVehicleTypeName = (type) => {
-          const typeMap = { 'van': 'バン', 'truck': 'トラック', 'car': '乗用車' };
-          return typeMap[type] || type;
-        };
-
-        // ヘッダー行1
-        wsData.push(['号車番号', '車種', currentYear + '年', dateStr]);
-        // ヘッダー行2
-        wsData.push([vehicleName, 'ナンバー', '', '']);
-
-        // チェック項目
-        const items = [
-          { section: 'タイヤ', items: ['空気圧が適当である', '亀裂および損傷がない', '異常な摩耗がない'] },
-          { section: 'ライト系', items: ['前照灯', '制動灯', '方向指示器'] },
-          { section: '備品', items: [
-            '構内駐車許可証', '事故発生時の対応', '車検証', 'リース会社メンテナンスガイド',
-            'メーカー取扱説明書', 'ナビ取扱説明書', 'スノーチェーン', 'ジャッキ（本体・クランク）',
-            '三角板', 'ハンドルロック', '発煙灯', 'ラッシング（３本）', '銀シート',
-            '救急セット', '霜取ヘラ', 'ウィンドウウォッシャー液', getSeasonalItem()
-          ]},
-          { section: 'その他', items: ['ETCクリーニング', 'ドライブレコーダーSDC交換', 'AdBlue残量'] },
-          { section: 'その他の内容', items: ['自由入力欄'] }
-        ];
-
-        items.forEach(section => {
-          section.items.forEach((item, idx) => {
-            const key = section.section === 'その他の内容' ? 'freeInput' : `${section.section}-${item}`;
-            const itemData = vehicleData[key] || {};
-            let result = '';
-            
-            if (key === 'freeInput') {
-              result = itemData.note || '';
-            } else if (itemData.status === 'good') {
-              result = '✓';
-            } else if (itemData.status === 'bad') {
-              result = itemData.note ? `× ${itemData.note}` : '×';
-            }
-
-            if (idx === 0) {
-              wsData.push([section.section, item, '', result]);
-            } else {
-              wsData.push(['', item, '', result]);
-            }
-          });
-        });
-
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-        // 列幅設定
-        ws['!cols'] = [
-          { wch: 12 },  // A列
-          { wch: 20 },  // B列
-          { wch: 15 },  // C列
-          { wch: 30 }   // D列
-        ];
-
-        // セル結合
-        ws['!merges'] = [
-          { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // A1:A2 号車番号
-          { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }, // C1:C2 年
-          { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } }, // D1:D2 日付
-          { s: { r: 0, c: 1 }, e: { r: 0, c: 1 } }, // B1 車種
-          { s: { r: 1, c: 1 }, e: { r: 1, c: 2 } }  // B2:C2 ナンバー
-        ];
-
-        // セクション結合
-        let currentRow = 2;
-        items.forEach(section => {
-          if (section.items.length > 1) {
-            ws['!merges'].push({
-              s: { r: currentRow, c: 0 },
-              e: { r: currentRow + section.items.length - 1, c: 0 }
-            });
-          }
-          section.items.forEach(() => {
-            ws['!merges'].push({
-              s: { r: currentRow, c: 1 },
-              e: { r: currentRow, c: 2 }
-            });
-            currentRow++;
-          });
-        });
-
-        XLSX.utils.book_append_sheet(wb, ws, vehicleName);
-        XLSX.writeFile(wb, `車両点検_${vehicleName}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.xlsx`);
+      const formatDateString = (dateStr) => {
+        const date = new Date(dateStr);
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
+        return `${month}/${day}(${dayOfWeek})`;
       };
 
-      // PDF生成関数
-      const generatePDF = (vehicleData, vehicleName, vehicleType) => {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
+      const handleAddDateTab = () => {
+        const newDate = new Date().toISOString().split('T')[0];
+        setDateTabs(prev => [...prev, newDate]);
+        setActiveTabIndex(dateTabs.length);
+      };
 
-        const now = new Date();
-        const month = now.getMonth() + 1;
-        const date = now.getDate();
-        const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
-        const dateStr = `${month}月${date}日(${dayOfWeek})`;
-        const currentYear = now.getFullYear();
+      const handleRemoveDateTab = (index) => {
+        if (dateTabs.length === 1) {
+          alert('最低1つの日付タブが必要です');
+          return;
+        }
 
-        const getVehicleTypeName = (type) => {
-          const typeMap = { 'van': 'バン', 'truck': 'トラック', 'car': '乗用車' };
-          return typeMap[type] || type;
-        };
-
-        // 日本語フォントシミュレーション（実際の日本語は表示されます）
-        let yPos = 20;
-
-        // タイトル
-        doc.setFontSize(18);
-        doc.text(`Vehicle Inspection Report - ${vehicleName}`, 105, yPos, { align: 'center' });
-        yPos += 10;
-
-        // ヘッダー情報
-        doc.setFontSize(12);
-        doc.text(`Vehicle: ${vehicleName}`, 20, yPos);
-        doc.text(`Type: ${getVehicleTypeName(vehicleType)}`, 80, yPos);
-        doc.text(`Date: ${dateStr}`, 140, yPos);
-        yPos += 10;
-
-        doc.setFontSize(10);
-        doc.text(`Year: ${currentYear}`, 20, yPos);
-        yPos += 15;
-
-        // チェック項目
-        const items = [
-          { section: 'Tire', items: ['Air pressure', 'Cracks/damage', 'Abnormal wear'] },
-          { section: 'Lights', items: ['Headlights', 'Brake lights', 'Turn signals'] },
-          { section: 'Equipment', items: [
-            'Parking permit', 'Accident manual', 'Registration', 'Maintenance guide',
-            'Manual', 'Navi manual', 'Chains', 'Jack', 'Triangle', 'Handle lock',
-            'Flare', 'Lashing', 'Silver sheet', 'First aid', 'Scraper', 'Washer fluid', 'De-icer/Cleaner'
-          ]},
-          { section: 'Other', items: ['ETC cleaning', 'Dashcam SD', 'AdBlue level'] },
-          { section: 'Notes', items: ['Free input'] }
-        ];
-
-        items.forEach(section => {
-          doc.setFontSize(11);
-          doc.setFont(undefined, 'bold');
-          doc.text(`[${section.section}]`, 20, yPos);
-          yPos += 6;
-
-          doc.setFont(undefined, 'normal');
-          doc.setFontSize(9);
-
-          section.items.forEach(item => {
-            const sectionMap = {
-              'Tire': 'タイヤ', 'Lights': 'ライト系', 'Equipment': '備品',
-              'Other': 'その他', 'Notes': 'その他の内容'
-            };
-            const key = sectionMap[section.section] === 'その他の内容' ? 'freeInput' : `${sectionMap[section.section]}-${checklistSections.find(s => s.title === sectionMap[section.section])?.items[section.items.indexOf(item)] || item}`;
-            const itemData = vehicleData[key] || {};
-            
-            let result = '';
-            if (key === 'freeInput') {
-              result = itemData.note || '-';
-            } else if (itemData.status === 'good') {
-              result = 'OK';
-            } else if (itemData.status === 'bad') {
-              result = itemData.note ? `NG: ${itemData.note}` : 'NG';
-            } else {
-              result = '-';
-            }
-
-            if (yPos > 270) {
-              doc.addPage();
-              yPos = 20;
-            }
-
-            doc.text(`  ${item}: ${result}`, 25, yPos);
-            yPos += 5;
+        const dateToRemove = dateTabs[index];
+        const dateStr = formatDateString(dateToRemove);
+        
+        if (confirm(`${dateStr}のデータを削除してもよろしいですか？`)) {
+          setDateTabs(prev => prev.filter((_, i) => i !== index));
+          
+          // データも削除
+          setChecklistData(prev => {
+            const newData = { ...prev };
+            const key = `${currentVehicleId}_${dateToRemove}`;
+            delete newData[key];
+            return newData;
           });
-          yPos += 3;
+          
+          // アクティブタブの調整
+          if (activeTabIndex >= index && activeTabIndex > 0) {
+            setActiveTabIndex(activeTabIndex - 1);
+          }
+        }
+      };
+
+      const handleDateChange = (index, newDate) => {
+        const oldDate = dateTabs[index];
+        setDateTabs(prev => {
+          const newTabs = [...prev];
+          newTabs[index] = newDate;
+          return newTabs;
         });
 
-        doc.save(`Vehicle_Inspection_${vehicleName}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.pdf`);
+        // データのキーも更新
+        setChecklistData(prev => {
+          const newData = { ...prev };
+          const oldKey = `${currentVehicleId}_${oldDate}`;
+          const newKey = `${currentVehicleId}_${newDate}`;
+          
+          if (newData[oldKey]) {
+            newData[newKey] = newData[oldKey];
+            delete newData[oldKey];
+          }
+          
+          return newData;
+        });
+      };
+
+      const getCurrentChecklistKey = () => {
+        if (currentVehicleId && dateTabs[activeTabIndex]) {
+          return `${currentVehicleId}_${dateTabs[activeTabIndex]}`;
+        }
+        return currentVehicleId;
       };
 
       const handleSaveChecklist = async () => {
@@ -546,13 +536,16 @@
         }
         
         setIsSaving(true);
-        const vehicleData = checklistData[currentVehicleId] || {};
+        const currentKey = getCurrentChecklistKey();
+        const vehicleData = checklistData[currentKey] || {};
         const vehicle = vehicles.find(v => v.id === currentVehicleId);
+        const currentInspectionDate = dateTabs[activeTabIndex];
         
         try {
           console.log('保存開始:', {
             vehicleId: currentVehicleId,
             vehicleName: currentVehicleName,
+            inspectionDate: currentInspectionDate,
             formats: selectedFormats
           });
           
@@ -563,6 +556,7 @@
             vehicleName: currentVehicleName,
             vehicleType: vehicle.type,
             timestamp: new Date().toISOString(),
+            inspectionDate: currentInspectionDate,
             checklistData: vehicleData,
             exportFormats: exportFormats
           };
@@ -581,7 +575,6 @@
             if (result.exports) {
               if (result.exports.excelUrl) {
                 downloadMessage += `\nEXCEL: ダウンロード中`;
-                // 直接ダウンロードリンクを使用
                 setTimeout(() => {
                   const link = document.createElement('a');
                   link.href = result.exports.excelUrl;
@@ -595,7 +588,6 @@
               
               if (result.exports.pdfUrl) {
                 downloadMessage += `\nPDF: ダウンロード中`;
-                // 直接ダウンロードリンクを使用
                 setTimeout(() => {
                   const link = document.createElement('a');
                   link.href = result.exports.pdfUrl;
@@ -608,12 +600,11 @@
               }
             }
 
-            
             // 完了車両として記録
             const now = new Date();
             const newCompleted = {
               ...completedVehicles,
-              [currentVehicleId]: now.toISOString()
+              [`${currentVehicleId}_${currentInspectionDate}`]: now.toISOString()
             };
             setCompletedVehicles(newCompleted);
             
@@ -629,7 +620,7 @@
             
             setChecklistData(prev => {
               const newData = { ...prev };
-              delete newData[currentVehicleId];
+              delete newData[currentKey];
               return newData;
             });
             
@@ -640,7 +631,7 @@
             if (selectedFormats.includes('excel')) formatsList.push('EXCEL');
             if (selectedFormats.includes('pdf')) formatsList.push('PDF');
             
-            alert(`保存完了\n\n車両: ${currentVehicleName}\n保存形式: ${formatsList.join(', ')}${downloadMessage}\n\nファイルは自動的にダウンロードされます\nブラウザのダウンロードフォルダを確認してください`);
+            alert(`保存完了\n\n車両: ${currentVehicleName}\n点検日: ${formatDateString(currentInspectionDate)}\n保存形式: ${formatsList.join(', ')}${downloadMessage}\n\nファイルは自動的にダウンロードされます\nブラウザのダウンロードフォルダを確認してください`);
             navigateToPage('vehicle-select');
           } else {
             throw new Error(result.message || '保存に失敗しました');
@@ -682,7 +673,6 @@
       // CORS回避：JSONP形式でGASにデータ送信
       const sendToGAS = (payload) => {
         return new Promise((resolve, reject) => {
-          // JSONPコールバック関数を設定
           const callbackName = 'gasCallback_' + Date.now();
           
           window[callbackName] = (response) => {
@@ -690,10 +680,8 @@
             resolve(response);
           };
 
-          // タイムアウト設定
           const timeout = setTimeout(() => {
             delete window[callbackName];
-            // タイムアウトでも成功扱い（GASには届いている可能性が高い）
             resolve({ 
               status: 'success', 
               message: '保存しました（タイムアウト）', 
@@ -701,7 +689,6 @@
             });
           }, 15000);
 
-          // GETパラメータとしてデータを送信
           const params = new URLSearchParams({
             data: JSON.stringify(payload),
             callback: callbackName
@@ -712,7 +699,6 @@
           script.onerror = () => {
             clearTimeout(timeout);
             delete window[callbackName];
-            // エラーでも成功扱い（mode: no-corsと同様）
             resolve({
               status: 'success',
               message: '保存しました（確認推奨）',
@@ -742,7 +728,10 @@
       };
 
       const handleNext = () => {
-        if (multiSelectMode && selectedVehicles.length > 0) {
+        if (currentPage === 'checklist') {
+          // チェックリスト画面から次へボタンを押したら保存形式選択へ
+          setShowSaveOptions(true);
+        } else if (multiSelectMode && selectedVehicles.length > 0) {
           setPopupVehicles(selectedVehicles);
           setShowPopup(true);
           setHasVisitedNext(true);
@@ -770,6 +759,12 @@
           const vehicle = vehicles.find(v => v.id === firstVehicleId);
           setCurrentVehicleId(firstVehicleId);
           setCurrentVehicleName(vehicle.name);
+          
+          // 新しいチェックリスト開始時に日付タブをリセット
+          const today = new Date().toISOString().split('T')[0];
+          setDateTabs([today]);
+          setActiveTabIndex(0);
+          
           navigateToPage('checklist');
           setShowPopup(false);
         } else {
@@ -781,31 +776,37 @@
 
       const handleCheckItem = (sectionTitle, itemName, status) => {
         const key = `${sectionTitle}-${itemName}`;
+        const currentKey = getCurrentChecklistKey();
+        
         setChecklistData(prev => ({
           ...prev,
-          [currentVehicleId]: {
-            ...prev[currentVehicleId],
-            [key]: { status, note: prev[currentVehicleId]?.[key]?.note || '' }
+          [currentKey]: {
+            ...prev[currentKey],
+            [key]: { status, note: prev[currentKey]?.[key]?.note || '' }
           }
         }));
       };
 
       const handleNoteChange = (sectionTitle, itemName, note) => {
         const key = `${sectionTitle}-${itemName}`;
+        const currentKey = getCurrentChecklistKey();
+        
         setChecklistData(prev => ({
           ...prev,
-          [currentVehicleId]: {
-            ...prev[currentVehicleId],
-            [key]: { ...prev[currentVehicleId]?.[key], note }
+          [currentKey]: {
+            ...prev[currentKey],
+            [key]: { ...prev[currentKey]?.[key], note }
           }
         }));
       };
 
       const handleFreeInputChange = (value) => {
+        const currentKey = getCurrentChecklistKey();
+        
         setChecklistData(prev => ({
           ...prev,
-          [currentVehicleId]: {
-            ...prev[currentVehicleId],
+          [currentKey]: {
+            ...prev[currentKey],
             'freeInput': { status: 'input', note: value }
           }
         }));
@@ -874,11 +875,48 @@
       }
 
       if (currentPage === 'checklist') {
+        const currentKey = getCurrentChecklistKey();
+        const currentChecklistData = checklistData[currentKey] || {};
+        
         return (
           <div className="h-full bg-gray-800 flex flex-col">
-            <div className="flex-shrink-0 pt-4 px-6 pb-4">
-              <div className="text-white text-xl font-semibold">
-                車両点検 - {currentVehicleName}
+            <div className="flex-shrink-0 pt-4 px-6 pb-2">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-white text-xl font-semibold">
+                  車両点検 - {currentVehicleName}
+                </div>
+                <input
+                  type="date"
+                  value={dateTabs[activeTabIndex]}
+                  onChange={(e) => handleDateChange(activeTabIndex, e.target.value)}
+                  className="ml-2"
+                />
+              </div>
+              
+              <div className="date-tabs">
+                {dateTabs.map((date, index) => (
+                  <div
+                    key={index}
+                    className={`date-tab ${index === activeTabIndex ? 'active' : ''}`}
+                    onClick={() => setActiveTabIndex(index)}
+                  >
+                    <span>{formatDateString(date)}</span>
+                    {dateTabs.length > 1 && (
+                      <button
+                        className="date-tab-close"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveDateTab(index);
+                        }}
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button className="add-date-tab" onClick={handleAddDateTab}>
+                  <Plus size={20} />
+                </button>
               </div>
             </div>
 
@@ -916,7 +954,7 @@
                   <div className="space-y-3">
                     {section.items.map((item, itemIndex) => {
                       const key = `${section.title}-${item}`;
-                      const itemData = checklistData[currentVehicleId]?.[key] || {};
+                      const itemData = currentChecklistData[key] || {};
                       const isGood = itemData.status === 'good';
                       const isBad = itemData.status === 'bad';
 
@@ -965,7 +1003,7 @@
                       <div>
                         <div className="text-white text-sm mb-2">自由入力</div>
                         <textarea
-                          value={checklistData[currentVehicleId]?.['freeInput']?.note || ''}
+                          value={currentChecklistData['freeInput']?.note || ''}
                           onChange={(e) => handleFreeInputChange(e.target.value)}
                           placeholder="その他の気づき事項を入力してください"
                           className="w-full bg-gray-700 text-white rounded-lg p-3 text-sm resize-none"
@@ -1006,10 +1044,7 @@
                     </button>
                     <button
                       className="p-4 bg-slate-600 hover:bg-slate-500 rounded-xl transition-colors active:opacity-70"
-                      onClick={() => {
-                        alert('点検完了！');
-                        navigateToPage('vehicle-select');
-                      }}
+                      onClick={handleNext}
                     >
                       <ChevronRight className="text-white" size={28} />
                     </button>
