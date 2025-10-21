@@ -184,7 +184,7 @@
     // ========================================
     // 🔧 ここにGoogleスプレッドシートのウェブアプリURLを貼り付けてください
     // ========================================
-    const SPREADSHEET_URL = 'https://script.google.com/macros/s/AKfycby-L2IOjK_kXw5wsU2ORg38p7Pm3uct2WImGX2izN49dJ3HqumM3ser4aV_na8_TLdd/exec';
+    const SPREADSHEET_URL = 'ここにあなたのウェブアプリURLを貼り付け';
     // ========================================
 
     const ClipboardCheck = ({ size = 24, className = "" }) => (
@@ -530,7 +530,7 @@
         if (isSaving) return;
         
         // URLチェック
-        if (!SPREADSHEET_URL || SPREADSHEET_URL === 'ここにあなたのウェブアプリURLを貼り付け') {
+        if (!SPREADSHEET_URL || SPREADSHEET_URL === 'https://script.google.com/macros/s/AKfycbzcVPMcNVaJgpIBd1QxZnS4Z7oGCGC5Th7wjLD35Zv7naFLDNJ595EBMwpwAyYWaXvTBA/exec') {
           alert('エラー: GoogleスプレッドシートのURLが設定されていません\n\nHTMLファイルの最上部にある\nSPREADSHEET_URL = "..."\nの部分に、GASのウェブアプリURLを貼り付けてください');
           return;
         }
