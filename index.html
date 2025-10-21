@@ -1,73 +1,4 @@
-{showSaveConfirm && (
-              <div
-                className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-6"
-                onClick={() => !isSaving && setShowSaveConfirm(false)}
-              >
-                <div
-                  className="bg-gray-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <h3 className="text-white text-xl font-semibold mb-4 text-center">
-                    保存オプション
-                  </h3>
-                  <p className="text-white text-center mb-4">
-                    車両 <span className="font-bold text-blue-400">{currentVehicleName}</span> の点検内容を保存します
-                  </p>
-                  <div className="text-gray-400 text-sm text-center mb-4">
-                    ✓ スプレッドシートに自動保存
-                  </div>
-                  
-                  <div className="space-y-3 mb-6">
-                    <label className="flex items-center gap-3 bg-gray-800 p-4 rounded-xl cursor-pointer hover:bg-gray-750 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={exportOptions.excel}
-                        onChange={(e) => setExportOptions(prev => ({ ...prev, excel: e.target.checked }))}
-                        className="w-5 h-5 rounded"
-                        disabled={isSaving}
-                      />
-                      <div className="flex-1">
-                        <div className="text-white font-medium">📊 Excel出力</div>
-                        <div className="text-gray-400 text-xs">同じフォーマットでExcelファイルをダウンロード</div>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 bg-gray-800 p-4 rounded-xl cursor-pointer hover:bg-gray-750 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={exportOptions.pdf}
-                        onChange={(e) => setExportOptions(prev => ({ ...prev, pdf: e.target.checked }))}
-                        className="w-5 h-5 rounded"
-                        disabled={isSaving}
-                      />
-                      <div className="flex-1">
-                        <div className="text-white font-medium">📄 PDF出力</div>
-                        <div className="text-gray-400 text-xs">同じフォーマットでPDFファイルをダウンロード</div>
-                      </div>
-                    </label>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <button
-                      className={`w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-medium transition-colors ${
-                        isSaving ? 'opacity-50 cursor-not-allowed' : 'active:opacity-70'
-                      }`}
-                      onClick={handleSaveChecklist}
-                      disabled={isSaving}
-                    >
-                      {isSaving ? '保存中...' : '保存する'}
-                    </button>
-                    <button
-                      className="w-full bg-gray-600 hover:bg-gray-500 text-white py-3 rounded-xl font-medium transition-colors active:opacity-70"
-                      onClick={() => setShowSaveConfirm(false)}
-                      disabled={isSaving}
-                    >
-                      キャンセル
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -76,6 +7,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>車両点検アプリ</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -151,9 +84,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
   <script type="text/babel">
     const { useState, useEffect } = React;
@@ -161,7 +91,7 @@
     // ========================================
     // 🔧 ここにGoogleスプレッドシートのウェブアプリURLを貼り付けてください
     // ========================================
-    const SPREADSHEET_URL = 'ここにあなたのウェブアプリURLを貼り付け';
+    const SPREADSHEET_URL = 'https://script.google.com/macros/s/AKfycbxHvS5v8g-fnJNHUltmo4AE65lRYQUF20JJBP9P9vz4ZH_PdQ94Kp91ve2pVt2R7cJB/exec';
     // ========================================
 
     const ClipboardCheck = ({ size = 24, className = "" }) => (
@@ -258,6 +188,14 @@
       </svg>
     );
 
+    const Download = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" x2="12" y1="15" y2="3" />
+      </svg>
+    );
+
     function WelcomePage() {
       const [currentDate, setCurrentDate] = useState('');
       const [currentPage, setCurrentPage] = useState('home');
@@ -271,12 +209,9 @@
       const [currentVehicleId, setCurrentVehicleId] = useState(null);
       const [currentVehicleName, setCurrentVehicleName] = useState('');
       const [completedVehicles, setCompletedVehicles] = useState({});
-      const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+      const [showSaveOptions, setShowSaveOptions] = useState(false);
+      const [selectedFormats, setSelectedFormats] = useState(['spreadsheet']);
       const [isSaving, setIsSaving] = useState(false);
-      const [exportOptions, setExportOptions] = useState({
-        excel: false,
-        pdf: false
-      });
 
       useEffect(() => {
         const updateDate = () => {
@@ -290,7 +225,6 @@
         updateDate();
         const interval = setInterval(updateDate, 60000);
 
-        // 完了済み車両情報を読み込み
         try {
           const savedData = localStorage.getItem('completedVehicles');
           if (savedData) {
@@ -298,11 +232,9 @@
             const currentMonth = new Date().getMonth();
             const currentYear = new Date().getFullYear();
             
-            // 月または年が変わったらリセット
             if (parsed.month === currentMonth && parsed.year === currentYear) {
               setCompletedVehicles(parsed.vehicles || {});
             } else {
-              // 月が変わったらリセット
               localStorage.removeItem('completedVehicles');
               setCompletedVehicles({});
             }
@@ -315,7 +247,6 @@
         return () => clearInterval(interval);
       }, []);
 
-      // ブラウザの戻る/進むボタン対応
       useEffect(() => {
         const handlePopState = (event) => {
           if (event.state && event.state.page) {
@@ -324,8 +255,6 @@
         };
 
         window.addEventListener('popstate', handlePopState);
-
-        // 初期状態を履歴に追加
         window.history.replaceState({ page: currentPage }, '');
 
         return () => {
@@ -413,6 +342,277 @@
         }
       ];
 
+      // EXCEL生成関数
+      const generateExcel = (vehicleData, vehicleName, vehicleType) => {
+        const wb = XLSX.utils.book_new();
+        const wsData = [];
+
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const date = now.getDate();
+        const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+        const dateStr = `${month}月${date}日(${dayOfWeek})`;
+        const currentYear = now.getFullYear();
+
+        const getVehicleTypeName = (type) => {
+          const typeMap = { 'van': 'バン', 'truck': 'トラック', 'car': '乗用車' };
+          return typeMap[type] || type;
+        };
+
+        // ヘッダー行1
+        wsData.push(['号車番号', '車種', currentYear + '年', dateStr]);
+        // ヘッダー行2
+        wsData.push([vehicleName, 'ナンバー', '', '']);
+
+        // チェック項目
+        const items = [
+          { section: 'タイヤ', items: ['空気圧が適当である', '亀裂および損傷がない', '異常な摩耗がない'] },
+          { section: 'ライト系', items: ['前照灯', '制動灯', '方向指示器'] },
+          { section: '備品', items: [
+            '構内駐車許可証', '事故発生時の対応', '車検証', 'リース会社メンテナンスガイド',
+            'メーカー取扱説明書', 'ナビ取扱説明書', 'スノーチェーン', 'ジャッキ（本体・クランク）',
+            '三角板', 'ハンドルロック', '発煙灯', 'ラッシング（３本）', '銀シート',
+            '救急セット', '霜取ヘラ', 'ウィンドウウォッシャー液', getSeasonalItem()
+          ]},
+          { section: 'その他', items: ['ETCクリーニング', 'ドライブレコーダーSDC交換', 'AdBlue残量'] },
+          { section: 'その他の内容', items: ['自由入力欄'] }
+        ];
+
+        items.forEach(section => {
+          section.items.forEach((item, idx) => {
+            const key = section.section === 'その他の内容' ? 'freeInput' : `${section.section}-${item}`;
+            const itemData = vehicleData[key] || {};
+            let result = '';
+            
+            if (key === 'freeInput') {
+              result = itemData.note || '';
+            } else if (itemData.status === 'good') {
+              result = '✓';
+            } else if (itemData.status === 'bad') {
+              result = itemData.note ? `× ${itemData.note}` : '×';
+            }
+
+            if (idx === 0) {
+              wsData.push([section.section, item, '', result]);
+            } else {
+              wsData.push(['', item, '', result]);
+            }
+          });
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        // 列幅設定
+        ws['!cols'] = [
+          { wch: 12 },  // A列
+          { wch: 20 },  // B列
+          { wch: 15 },  // C列
+          { wch: 30 }   // D列
+        ];
+
+        // セル結合
+        ws['!merges'] = [
+          { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // A1:A2 号車番号
+          { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }, // C1:C2 年
+          { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } }, // D1:D2 日付
+          { s: { r: 0, c: 1 }, e: { r: 0, c: 1 } }, // B1 車種
+          { s: { r: 1, c: 1 }, e: { r: 1, c: 2 } }  // B2:C2 ナンバー
+        ];
+
+        // セクション結合
+        let currentRow = 2;
+        items.forEach(section => {
+          if (section.items.length > 1) {
+            ws['!merges'].push({
+              s: { r: currentRow, c: 0 },
+              e: { r: currentRow + section.items.length - 1, c: 0 }
+            });
+          }
+          section.items.forEach(() => {
+            ws['!merges'].push({
+              s: { r: currentRow, c: 1 },
+              e: { r: currentRow, c: 2 }
+            });
+            currentRow++;
+          });
+        });
+
+        XLSX.utils.book_append_sheet(wb, ws, vehicleName);
+        XLSX.writeFile(wb, `車両点検_${vehicleName}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.xlsx`);
+      };
+
+      // PDF生成関数
+      const generatePDF = (vehicleData, vehicleName, vehicleType) => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const date = now.getDate();
+        const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+        const dateStr = `${month}月${date}日(${dayOfWeek})`;
+        const currentYear = now.getFullYear();
+
+        const getVehicleTypeName = (type) => {
+          const typeMap = { 'van': 'バン', 'truck': 'トラック', 'car': '乗用車' };
+          return typeMap[type] || type;
+        };
+
+        // 日本語フォントシミュレーション（実際の日本語は表示されます）
+        let yPos = 20;
+
+        // タイトル
+        doc.setFontSize(18);
+        doc.text(`Vehicle Inspection Report - ${vehicleName}`, 105, yPos, { align: 'center' });
+        yPos += 10;
+
+        // ヘッダー情報
+        doc.setFontSize(12);
+        doc.text(`Vehicle: ${vehicleName}`, 20, yPos);
+        doc.text(`Type: ${getVehicleTypeName(vehicleType)}`, 80, yPos);
+        doc.text(`Date: ${dateStr}`, 140, yPos);
+        yPos += 10;
+
+        doc.setFontSize(10);
+        doc.text(`Year: ${currentYear}`, 20, yPos);
+        yPos += 15;
+
+        // チェック項目
+        const items = [
+          { section: 'Tire', items: ['Air pressure', 'Cracks/damage', 'Abnormal wear'] },
+          { section: 'Lights', items: ['Headlights', 'Brake lights', 'Turn signals'] },
+          { section: 'Equipment', items: [
+            'Parking permit', 'Accident manual', 'Registration', 'Maintenance guide',
+            'Manual', 'Navi manual', 'Chains', 'Jack', 'Triangle', 'Handle lock',
+            'Flare', 'Lashing', 'Silver sheet', 'First aid', 'Scraper', 'Washer fluid', 'De-icer/Cleaner'
+          ]},
+          { section: 'Other', items: ['ETC cleaning', 'Dashcam SD', 'AdBlue level'] },
+          { section: 'Notes', items: ['Free input'] }
+        ];
+
+        items.forEach(section => {
+          doc.setFontSize(11);
+          doc.setFont(undefined, 'bold');
+          doc.text(`[${section.section}]`, 20, yPos);
+          yPos += 6;
+
+          doc.setFont(undefined, 'normal');
+          doc.setFontSize(9);
+
+          section.items.forEach(item => {
+            const sectionMap = {
+              'Tire': 'タイヤ', 'Lights': 'ライト系', 'Equipment': '備品',
+              'Other': 'その他', 'Notes': 'その他の内容'
+            };
+            const key = sectionMap[section.section] === 'その他の内容' ? 'freeInput' : `${sectionMap[section.section]}-${checklistSections.find(s => s.title === sectionMap[section.section])?.items[section.items.indexOf(item)] || item}`;
+            const itemData = vehicleData[key] || {};
+            
+            let result = '';
+            if (key === 'freeInput') {
+              result = itemData.note || '-';
+            } else if (itemData.status === 'good') {
+              result = 'OK';
+            } else if (itemData.status === 'bad') {
+              result = itemData.note ? `NG: ${itemData.note}` : 'NG';
+            } else {
+              result = '-';
+            }
+
+            if (yPos > 270) {
+              doc.addPage();
+              yPos = 20;
+            }
+
+            doc.text(`  ${item}: ${result}`, 25, yPos);
+            yPos += 5;
+          });
+          yPos += 3;
+        });
+
+        doc.save(`Vehicle_Inspection_${vehicleName}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.pdf`);
+      };
+
+      const handleSaveChecklist = async () => {
+        if (isSaving) return;
+        
+        setIsSaving(true);
+        const vehicleData = checklistData[currentVehicleId] || {};
+        const vehicle = vehicles.find(v => v.id === currentVehicleId);
+        
+        try {
+          // Spreadsheetへの保存
+          if (selectedFormats.includes('spreadsheet')) {
+            const payload = {
+              vehicleId: currentVehicleId,
+              vehicleName: currentVehicleName,
+              vehicleType: vehicle.type,
+              timestamp: new Date().toISOString(),
+              checklistData: vehicleData
+            };
+
+            await fetch(SPREADSHEET_URL, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+          }
+
+          // EXCEL出力
+          if (selectedFormats.includes('excel')) {
+            generateExcel(vehicleData, currentVehicleName, vehicle.type);
+          }
+
+          // PDF出力
+          if (selectedFormats.includes('pdf')) {
+            generatePDF(vehicleData, currentVehicleName, vehicle.type);
+          }
+
+          // 完了車両として記録
+          const now = new Date();
+          const newCompleted = {
+            ...completedVehicles,
+            [currentVehicleId]: now.toISOString()
+          };
+          setCompletedVehicles(newCompleted);
+          
+          try {
+            localStorage.setItem('completedVehicles', JSON.stringify({
+              year: now.getFullYear(),
+              month: now.getMonth(),
+              vehicles: newCompleted
+            }));
+          } catch (storageError) {
+            console.warn('localStorage保存エラー:', storageError);
+          }
+          
+          setChecklistData(prev => {
+            const newData = { ...prev };
+            delete newData[currentVehicleId];
+            return newData;
+          });
+          
+          setShowSaveOptions(false);
+          
+          const formatsList = [];
+          if (selectedFormats.includes('spreadsheet')) formatsList.push('スプレッドシート');
+          if (selectedFormats.includes('excel')) formatsList.push('EXCEL');
+          if (selectedFormats.includes('pdf')) formatsList.push('PDF');
+          
+          alert(`✅ 車両 ${currentVehicleName} の点検データを保存しました！\n保存形式: ${formatsList.join(', ')}`);
+          navigateToPage('vehicle-select');
+        } catch (error) {
+          console.error('保存エラー:', error);
+          alert('⚠️ データの保存中にエラーが発生しました。\nネットワーク接続を確認してください。');
+        } finally {
+          setIsSaving(false);
+        }
+      };
+
       const handleVehicleClick = (vehicleId) => {
         if (multiSelectMode) {
           setSelectedVehicles(prev => 
@@ -496,456 +696,18 @@
         }));
       };
 
-      const handleSaveChecklist = async () => {
-        if (isSaving) return;
-        
-        setIsSaving(true);
-        const vehicleData = checklistData[currentVehicleId] || {};
-        
-        // スプレッドシートに送信するデータを準備
-        const payload = {
-          vehicleId: currentVehicleId,
-          vehicleName: currentVehicleName,
-          vehicleType: vehicles.find(v => v.id === currentVehicleId)?.type || 'unknown',
-          timestamp: new Date().toISOString(),
-          checklistData: vehicleData
-        };
-
-        try {
-          // Googleスプレッドシートに送信（常に実行）
-          await fetch(SPREADSHEET_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
-          });
-
-          console.log('保存されたデータ:', payload);
-          
-          // Excel出力が選択されている場合
-          if (exportOptions.excel) {
-            exportToExcel(payload);
-          }
-          
-          // PDF出力が選択されている場合
-          if (exportOptions.pdf) {
-            exportToPDF(payload);
-          }
-          
-          // 完了車両として記録
-          const now = new Date();
-          const newCompleted = {
-            ...completedVehicles,
-            [currentVehicleId]: now.toISOString()
-          };
-          setCompletedVehicles(newCompleted);
-          
-          // localStorageに保存（年月情報も含める）
-          try {
-            localStorage.setItem('completedVehicles', JSON.stringify({
-              year: now.getFullYear(),
-              month: now.getMonth(),
-              vehicles: newCompleted
-            }));
-          } catch (storageError) {
-            console.warn('localStorage保存エラー:', storageError);
-          }
-          
-          // チェックリストデータをリセット
-          setChecklistData(prev => {
-            const newData = { ...prev };
-            delete newData[currentVehicleId];
-            return newData;
-          });
-          
-          // 出力オプションをリセット
-          setExportOptions({ excel: false, pdf: false });
-          setShowSaveConfirm(false);
-          
-          let message = `✅ 車両 ${currentVehicleName} の点検データを保存しました！`;
-          if (exportOptions.excel) message += '\n📊 Excelファイルをダウンロードしました。';
-          if (exportOptions.pdf) message += '\n📄 PDFファイルをダウンロードしました。';
-          
-          alert(message);
-          navigateToPage('vehicle-select');
-        } catch (error) {
-          console.error('保存エラー:', error);
-          alert('⚠️ データの保存中にエラーが発生しました。\nネットワーク接続を確認してください。');
-        } finally {
-          setIsSaving(false);
-        }
-      };
-
-      // Excel出力関数（スプレッドシートと同じフォーマット）
-      const exportToExcel = (payload) => {
-        const wb = XLSX.utils.book_new();
-        
-        // 空のワークシートを作成（29行 x 15列）
-        const ws = {};
-        const range = { s: { r: 0, c: 0 }, e: { r: 28, c: 14 } };
-        
-        // 列幅設定用の配列
-        const wscols = [
-          { wch: 12 }, // A: 号車番号
-          { wch: 18 }, // B: 車種/項目
-          { wch: 24 }, // C: ナンバー/項目続き
-          { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, // D-G
-          { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, // H-K
-          { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }  // L-O
-        ];
-        ws['!cols'] = wscols;
-        
-        // 行の高さ設定
-        const wsrows = [
-          { hpt: 30 }, { hpt: 30 }, // 1-2行目
-          ...Array(27).fill({ hpt: 22 }) // 3-29行目
-        ];
-        ws['!rows'] = wsrows;
-        
-        // ========================================
-        // ヘッダー部分
-        // ========================================
-        
-        // A1-A2結合: 号車番号
-        ws['A1'] = { 
-          v: payload.vehicleName, 
-          t: 's',
-          s: {
-            fill: { fgColor: { rgb: '4a5568' } },
-            font: { color: { rgb: 'FFFFFF' }, bold: true },
-            alignment: { horizontal: 'center', vertical: 'center' }
-          }
-        };
-        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }]; // A1:A2
-        
-        // B1: 車種
-        const vehicleTypeMap = { 'van': 'バン', 'truck': 'トラック', 'car': '乗用車' };
-        ws['B1'] = { 
-          v: vehicleTypeMap[payload.vehicleType] || payload.vehicleType, 
-          t: 's',
-          s: {
-            fill: { fgColor: { rgb: '4a5568' } },
-            font: { color: { rgb: 'FFFFFF' }, bold: true },
-            alignment: { horizontal: 'center', vertical: 'center' }
-          }
-        };
-        
-        // B2: ナンバー
-        ws['B2'] = { 
-          v: 'ナンバー未設定', 
-          t: 's',
-          s: {
-            fill: { fgColor: { rgb: '4a5568' } },
-            font: { color: { rgb: 'FFFFFF' }, bold: true },
-            alignment: { horizontal: 'center', vertical: 'center' }
-          }
-        };
-        
-        // C1-C2結合: 年
-        const currentYear = new Date().getFullYear();
-        ws['C1'] = { 
-          v: currentYear + '年', 
-          t: 's',
-          s: {
-            fill: { fgColor: { rgb: '4a5568' } },
-            font: { color: { rgb: 'FFFFFF' }, bold: true },
-            alignment: { horizontal: 'center', vertical: 'center' }
-          }
-        };
-        ws['!merges'].push({ s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }); // C1:C2
-        
-        // D1-D2結合: 点検日
-        const date = new Date(payload.timestamp);
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
-        ws['D1'] = { 
-          v: `${month}月${day}日(${dayOfWeek})`, 
-          t: 's',
-          s: {
-            fill: { fgColor: { rgb: '4a5568' } },
-            font: { color: { rgb: 'FFFFFF' }, bold: true },
-            alignment: { horizontal: 'center', vertical: 'center' }
-          }
-        };
-        ws['!merges'].push({ s: { r: 0, c: 3 }, e: { r: 1, c: 3 } }); // D1:D2
-        
-        // ========================================
-        // チェック項目
-        // ========================================
-        
-        const items = [
-          { section: 'タイヤ', rows: [2, 3, 4], items: [
-            'タイヤ-空気圧が適当である',
-            'タイヤ-亀裂および損傷がない',
-            'タイヤ-異常な摩耗がない'
-          ], labels: ['空気圧が適当である', '亀裂および損傷がない', '異常な摩耗がない'] },
-          { section: 'ライト系', rows: [5, 6, 7], items: [
-            'ライト系-前照灯',
-            'ライト系-制動灯',
-            'ライト系-方向指示器'
-          ], labels: ['前照灯', '制動灯', '方向指示器'] },
-          { section: '備品', rows: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24], 
-            items: [
-              '備品-構内駐車許可証', '備品-事故発生時の対応', '備品-車検証', '備品-リース会社メンテナンスガイド',
-              '備品-メーカー取扱説明書', '備品-ナビ取扱説明書', '備品-スノーチェーン', '備品-ジャッキ（本体・クランク）',
-              '備品-三角板', '備品-ハンドルロック', '備品-発煙灯', '備品-ラッシング（３本）', '備品-銀シート',
-              '備品-救急セット', '備品-霜取ヘラ', '備品-ウィンドウウォッシャー液', '備品-氷解スプレー'
-            ],
-            labels: [
-              '構内駐車許可証', '事故発生時の対応', '車検証', 'リース会社メンテナンスガイド',
-              'メーカー取扱説明書', 'ナビ取扱説明書', 'スノーチェーン', 'ジャッキ（本体・クランク）',
-              '三角板', 'ハンドルロック', '発煙灯', 'ラッシング（３本）', '銀シート',
-              '救急セット', '霜取ヘラ', 'ウィンドウウォッシャー液', getSeasonalItem()
-            ]
-          },
-          { section: 'その他', rows: [25, 26, 27], items: [
-            'その他-ETCクリーニング',
-            'その他-ドライブレコーダーSDC交換',
-            'その他-AdBlue残量'
-          ], labels: ['ETCクリーニング', 'ドライブレコーダーSDC交換', 'AdBlue残量'] },
-          { section: 'その他の内容', rows: [28], items: ['freeInput'], labels: ['自由入力欄'] }
-        ];
-        
-        items.forEach(section => {
-          const startRow = section.rows[0];
-          const endRow = section.rows[section.rows.length - 1];
-          const colA = String.fromCharCode(65); // 'A'
-          
-          // A列：セクション名（結合）
-          ws[colA + (startRow + 1)] = { 
-            v: section.section, 
-            t: 's',
-            s: {
-              fill: { fgColor: { rgb: 'e2e8f0' } },
-              font: { bold: true },
-              alignment: { horizontal: 'center', vertical: 'center' },
-              border: {
-                top: { style: 'thin', color: { rgb: '000000' } },
-                bottom: { style: 'thin', color: { rgb: '000000' } },
-                left: { style: 'thin', color: { rgb: '000000' } },
-                right: { style: 'thin', color: { rgb: '000000' } }
-              }
-            }
-          };
-          
-          if (section.rows.length > 1) {
-            ws['!merges'].push({ 
-              s: { r: startRow, c: 0 }, 
-              e: { r: endRow, c: 0 } 
-            });
-          }
-          
-          // B-C列：項目名（横結合）
-          section.labels.forEach((label, index) => {
-            const row = section.rows[index];
-            const cellRef = 'B' + (row + 1);
-            ws[cellRef] = { 
-              v: label, 
-              t: 's',
-              s: {
-                fill: { fgColor: { rgb: 'f7fafc' } },
-                alignment: { vertical: 'center' },
-                border: {
-                  top: { style: 'thin', color: { rgb: '000000' } },
-                  bottom: { style: 'thin', color: { rgb: '000000' } },
-                  left: { style: 'thin', color: { rgb: '000000' } },
-                  right: { style: 'thin', color: { rgb: '000000' } }
-                }
-              }
-            };
-            ws['!merges'].push({ 
-              s: { r: row, c: 1 }, 
-              e: { r: row, c: 2 } 
-            });
-            
-            // D列：チェック結果
-            const itemKey = section.items[index];
-            const itemData = payload.checklistData[itemKey] || {};
-            const resultCell = 'D' + (row + 1);
-            
-            if (itemKey === 'freeInput') {
-              ws[resultCell] = { 
-                v: itemData.note || '', 
-                t: 's',
-                s: {
-                  alignment: { horizontal: 'center', vertical: 'center' },
-                  border: {
-                    top: { style: 'thin', color: { rgb: '000000' } },
-                    bottom: { style: 'thin', color: { rgb: '000000' } },
-                    left: { style: 'thin', color: { rgb: '000000' } },
-                    right: { style: 'thin', color: { rgb: '000000' } }
-                  }
-                }
-              };
-            } else if (itemData.status === 'good') {
-              ws[resultCell] = { 
-                v: '✓', 
-                t: 's',
-                s: {
-                  font: { color: { rgb: 'e53e3e' }, bold: true, sz: 14 },
-                  alignment: { horizontal: 'center', vertical: 'center' },
-                  border: {
-                    top: { style: 'thin', color: { rgb: '000000' } },
-                    bottom: { style: 'thin', color: { rgb: '000000' } },
-                    left: { style: 'thin', color: { rgb: '000000' } },
-                    right: { style: 'thin', color: { rgb: '000000' } }
-                  }
-                }
-              };
-            } else if (itemData.status === 'bad') {
-              const text = itemData.note ? `× ${itemData.note}` : '×';
-              ws[resultCell] = { 
-                v: text, 
-                t: 's',
-                s: {
-                  font: { sz: 10 },
-                  alignment: { horizontal: 'center', vertical: 'center' },
-                  border: {
-                    top: { style: 'thin', color: { rgb: '000000' } },
-                    bottom: { style: 'thin', color: { rgb: '000000' } },
-                    left: { style: 'thin', color: { rgb: '000000' } },
-                    right: { style: 'thin', color: { rgb: '000000' } }
-                  }
-                }
-              };
-            }
-          });
-        });
-        
-        ws['!ref'] = XLSX.utils.encode_range(range);
-        
-        XLSX.utils.book_append_sheet(wb, ws, payload.vehicleName);
-        XLSX.writeFile(wb, `車両点検_${payload.vehicleName}_${date.getFullYear()}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}.xlsx`);
-      };
-
-      // PDF出力関数（スプレッドシートと同じフォーマット）
-      const exportToPDF = (payload) => {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({
-          orientation: 'landscape',
-          unit: 'mm',
-          format: 'a4'
-        });
-        
-        // 日本語フォント設定のための代替（基本的なASCII文字のみ対応）
-        doc.setFont('helvetica');
-        
-        const date = new Date(payload.timestamp);
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
-        
-        // タイトル
-        doc.setFontSize(16);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`車両点検記録 - ${payload.vehicleName}`, 15, 15);
-        
-        doc.setFontSize(10);
-        doc.text(`点検日: ${date.getFullYear()}年${month}月${day}日(${dayOfWeek})`, 15, 22);
-        
-        // テーブルデータを準備
-        const tableData = [];
-        
-        const items = [
-          { section: 'タイヤ', items: [
-            { key: 'タイヤ-空気圧が適当である', label: '空気圧が適当である' },
-            { key: 'タイヤ-亀裂および損傷がない', label: '亀裂および損傷がない' },
-            { key: 'タイヤ-異常な摩耗がない', label: '異常な摩耗がない' }
-          ]},
-          { section: 'ライト系', items: [
-            { key: 'ライト系-前照灯', label: '前照灯' },
-            { key: 'ライト系-制動灯', label: '制動灯' },
-            { key: 'ライト系-方向指示器', label: '方向指示器' }
-          ]},
-          { section: '備品', items: [
-            { key: '備品-構内駐車許可証', label: '構内駐車許可証' },
-            { key: '備品-事故発生時の対応', label: '事故発生時の対応' },
-            { key: '備品-車検証', label: '車検証' },
-            { key: '備品-リース会社メンテナンスガイド', label: 'リース会社メンテナンスガイド' },
-            { key: '備品-メーカー取扱説明書', label: 'メーカー取扱説明書' },
-            { key: '備品-ナビ取扱説明書', label: 'ナビ取扱説明書' },
-            { key: '備品-スノーチェーン', label: 'スノーチェーン' },
-            { key: '備品-ジャッキ（本体・クランク）', label: 'ジャッキ（本体・クランク）' },
-            { key: '備品-三角板', label: '三角板' },
-            { key: '備品-ハンドルロック', label: 'ハンドルロック' },
-            { key: '備品-発煙灯', label: '発煙灯' },
-            { key: '備品-ラッシング（３本）', label: 'ラッシング（３本）' },
-            { key: '備品-銀シート', label: '銀シート' },
-            { key: '備品-救急セット', label: '救急セット' },
-            { key: '備品-霜取ヘラ', label: '霜取ヘラ' },
-            { key: '備品-ウィンドウウォッシャー液', label: 'ウィンドウウォッシャー液' },
-            { key: '備品-氷解スプレー', label: getSeasonalItem() }
-          ]},
-          { section: 'その他', items: [
-            { key: 'その他-ETCクリーニング', label: 'ETCクリーニング' },
-            { key: 'その他-ドライブレコーダーSDC交換', label: 'ドライブレコーダーSDC交換' },
-            { key: 'その他-AdBlue残量', label: 'AdBlue残量' }
-          ]},
-          { section: 'その他の内容', items: [
-            { key: 'freeInput', label: '自由入力欄' }
-          ]}
-        ];
-        
-        items.forEach(section => {
-          section.items.forEach((item, index) => {
-            const itemData = payload.checklistData[item.key] || {};
-            let result = '';
-            
-            if (item.key === 'freeInput') {
-              result = itemData.note || '';
-            } else if (itemData.status === 'good') {
-              result = '✓';
-            } else if (itemData.status === 'bad') {
-              result = itemData.note ? `× ${itemData.note}` : '×';
-            }
-            
-            tableData.push([
-              index === 0 ? section.section : '',
-              item.label,
-              result
-            ]);
-          });
-        });
-        
-        doc.autoTable({
-          startY: 28,
-          head: [['セクション', '項目', '結果']],
-          body: tableData,
-          theme: 'grid',
-          headStyles: {
-            fillColor: [74, 85, 104],
-            textColor: [255, 255, 255],
-            fontStyle: 'bold',
-            halign: 'center'
-          },
-          columnStyles: {
-            0: { cellWidth: 30, halign: 'center', fontStyle: 'bold', fillColor: [226, 232, 240] },
-            1: { cellWidth: 100, fillColor: [247, 250, 252] },
-            2: { cellWidth: 60, halign: 'center' }
-          },
-          styles: {
-            font: 'helvetica',
-            fontSize: 9,
-            cellPadding: 3
-          },
-          didParseCell: function(data) {
-            // 結果列で✓の場合は赤色に
-            if (data.column.index === 2 && data.cell.raw === '✓') {
-              data.cell.styles.textColor = [229, 62, 62];
-              data.cell.styles.fontStyle = 'bold';
-              data.cell.styles.fontSize = 12;
-            }
-          }
-        });
-        
-        doc.save(`車両点検_${payload.vehicleName}_${date.getFullYear()}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}.pdf`);
-      };
-
       const handleSaveClick = () => {
-        setShowSaveConfirm(true);
+        setShowSaveOptions(true);
+      };
+
+      const toggleFormat = (format) => {
+        setSelectedFormats(prev => {
+          if (prev.includes(format)) {
+            return prev.filter(f => f !== format);
+          } else {
+            return [...prev, format];
+          }
+        });
       };
 
       const apps = [
@@ -1103,9 +865,10 @@
               <div className="mb-6">
                 <button
                   onClick={handleSaveClick}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-semibold transition-colors active:opacity-70"
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-semibold transition-colors active:opacity-70 flex items-center justify-center gap-2"
                 >
-                  この内容で保存
+                  <Download size={24} />
+                  保存形式を選択
                 </button>
               </div>
             </div>
@@ -1140,39 +903,91 @@
               </div>
             </div>
 
-            {showSaveConfirm && (
+            {showSaveOptions && (
               <div
                 className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-6"
-                onClick={() => !isSaving && setShowSaveConfirm(false)}
+                onClick={() => !isSaving && setShowSaveOptions(false)}
               >
                 <div
                   className="bg-gray-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <h3 className="text-white text-xl font-semibold mb-4 text-center">
-                    保存確認
+                  <h3 className="text-white text-xl font-semibold mb-2 text-center">
+                    保存形式を選択
                   </h3>
-                  <p className="text-white text-center mb-6">
-                    車両 <span className="font-bold text-blue-400">{currentVehicleName}</span> の点検内容を保存しますか？
+                  <p className="text-gray-400 text-sm text-center mb-6">
+                    複数選択可能
                   </p>
+                  
+                  <div className="space-y-3 mb-6">
+                    <button
+                      onClick={() => toggleFormat('spreadsheet')}
+                      className={`w-full py-4 rounded-xl font-medium transition-colors flex items-center justify-between px-4 ${
+                        selectedFormats.includes('spreadsheet')
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-700 text-white hover:bg-gray-600'
+                      }`}
+                    >
+                      <span>📊 Google Spreadsheet</span>
+                      {selectedFormats.includes('spreadsheet') && (
+                        <CheckSquare size={20} />
+                      )}
+                    </button>
+                    
+                    <button
+                      onClick={() => toggleFormat('excel')}
+                      className={`w-full py-4 rounded-xl font-medium transition-colors flex items-center justify-between px-4 ${
+                        selectedFormats.includes('excel')
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-700 text-white hover:bg-gray-600'
+                      }`}
+                    >
+                      <span>📗 EXCEL (.xlsx)</span>
+                      {selectedFormats.includes('excel') && (
+                        <CheckSquare size={20} />
+                      )}
+                    </button>
+                    
+                    <button
+                      onClick={() => toggleFormat('pdf')}
+                      className={`w-full py-4 rounded-xl font-medium transition-colors flex items-center justify-between px-4 ${
+                        selectedFormats.includes('pdf')
+                          ? 'bg-red-500 text-white'
+                          : 'bg-gray-700 text-white hover:bg-gray-600'
+                      }`}
+                    >
+                      <span>📕 PDF</span>
+                      {selectedFormats.includes('pdf') && (
+                        <CheckSquare size={20} />
+                      )}
+                    </button>
+                  </div>
+
                   <div className="space-y-3">
                     <button
-                      className={`w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-medium transition-colors ${
-                        isSaving ? 'opacity-50 cursor-not-allowed' : 'active:opacity-70'
+                      className={`w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 ${
+                        isSaving || selectedFormats.length === 0 ? 'opacity-50 cursor-not-allowed' : 'active:opacity-70'
                       }`}
                       onClick={handleSaveChecklist}
-                      disabled={isSaving}
+                      disabled={isSaving || selectedFormats.length === 0}
                     >
+                      <Download size={20} />
                       {isSaving ? '保存中...' : '保存する'}
                     </button>
                     <button
                       className="w-full bg-gray-600 hover:bg-gray-500 text-white py-3 rounded-xl font-medium transition-colors active:opacity-70"
-                      onClick={() => setShowSaveConfirm(false)}
+                      onClick={() => setShowSaveOptions(false)}
                       disabled={isSaving}
                     >
                       キャンセル
                     </button>
                   </div>
+                  
+                  {selectedFormats.length === 0 && (
+                    <p className="text-red-400 text-xs text-center mt-3">
+                      ※ 1つ以上の形式を選択してください
+                    </p>
+                  )}
                 </div>
               </div>
             )}
