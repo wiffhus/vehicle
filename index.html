@@ -539,7 +539,7 @@
         
         // URLチェック
         if (!SPREADSHEET_URL || SPREADSHEET_URL === 'ここにあなたのウェブアプリURLを貼り付け') {
-          alert('⚠️ エラー: GoogleスプレッドシートのURLが設定されていません。\n\nHTMLファイルの最上部にある\nSPREADSHEET_URL = "..."\nの部分に、GASのウェブアプリURLを貼り付けてください。');
+          alert('エラー: GoogleスプレッドシートのURLが設定されていません\n\nHTMLファイルの最上部にある\nSPREADSHEET_URL = "..."\nの部分に、GASのウェブアプリURLを貼り付けてください');
           return;
         }
         
@@ -578,7 +578,7 @@
             // Excel/PDFファイルを直接ダウンロード
             if (result.exports) {
               if (result.exports.excelUrl) {
-                downloadMessage += `\n\n📗 Excel: ダウンロード中...`;
+                downloadMessage += `\nEXCEL: ダウンロード中`;
                 // 直接ダウンロードリンクを使用
                 setTimeout(() => {
                   const link = document.createElement('a');
@@ -592,7 +592,7 @@
               }
               
               if (result.exports.pdfUrl) {
-                downloadMessage += `\n📕 PDF: ダウンロード中...`;
+                downloadMessage += `\nPDF: ダウンロード中`;
                 // 直接ダウンロードリンクを使用
                 setTimeout(() => {
                   const link = document.createElement('a');
@@ -634,11 +634,11 @@
             setShowSaveOptions(false);
             
             const formatsList = [];
-            if (selectedFormats.includes('spreadsheet')) formatsList.push('📊 スプレッドシート');
-            if (selectedFormats.includes('excel')) formatsList.push('📗 EXCEL');
-            if (selectedFormats.includes('pdf')) formatsList.push('📕 PDF');
+            if (selectedFormats.includes('spreadsheet')) formatsList.push('Spreadsheet');
+            if (selectedFormats.includes('excel')) formatsList.push('EXCEL');
+            if (selectedFormats.includes('pdf')) formatsList.push('PDF');
             
-            alert(`✅ 車両 ${currentVehicleName} の点検データを保存しました！\n\n保存形式: ${formatsList.join(', ')}${downloadMessage}\n\n※ ファイルは自動的にダウンロードされます\n※ ブラウザのダウンロードフォルダを確認してください`);
+            alert(`保存完了\n\n車両: ${currentVehicleName}\n保存形式: ${formatsList.join(', ')}${downloadMessage}\n\nファイルは自動的にダウンロードされます\nブラウザのダウンロードフォルダを確認してください`);
             navigateToPage('vehicle-select');
           } else {
             throw new Error(result.message || '保存に失敗しました');
@@ -651,20 +651,20 @@
             url: SPREADSHEET_URL
           });
           
-          let errorMessage = '⚠️ データの保存中にエラーが発生しました。\n\n';
+          let errorMessage = 'データの保存中にエラーが発生しました\n\n';
           
           if (error.message.includes('fetch')) {
-            errorMessage += '【ネットワークエラー】\n' +
+            errorMessage += '[ネットワークエラー]\n' +
                           '・インターネット接続を確認してください\n' +
                           '・GASのウェブアプリURLが正しいか確認してください\n' +
                           '・GASが「全員」にアクセス許可されているか確認してください';
           } else if (error.message.includes('JSON')) {
-            errorMessage += '【GASエラー】\n' +
+            errorMessage += '[GASエラー]\n' +
                           '・GASのコードが正しく保存されているか確認してください\n' +
                           '・GASの実行ログでエラーを確認してください';
           } else {
             errorMessage += 'エラー: ' + error.message + '\n\n' +
-                          '【確認事項】\n' +
+                          '[確認事項]\n' +
                           '1. GASのウェブアプリURLが正しく設定されているか\n' +
                           '2. GASが最新のコードでデプロイされているか\n' +
                           '3. GASの権限が「全員」になっているか\n' +
@@ -824,7 +824,7 @@
       };
 
       const apps = [
-        { id: 1, name: '車両点検', icon: ClipboardCheck, color: 'bg-blue-500', action: () => navigateToPage('vehicle-select') }
+        { id: 1, name: '車両点検', icon: ClipboardCheck, color: 'bg-slate-600', action: () => navigateToPage('vehicle-select') }
       ];
 
       if (currentPage === 'home') {
@@ -894,7 +894,7 @@
                             handleCheckItem(section.title, item, 'good');
                           });
                         }}
-                        className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg transition-colors active:opacity-70 flex items-center gap-1"
+                        className="px-3 py-1 bg-slate-600 hover:bg-slate-500 text-white text-xs rounded-lg transition-colors active:opacity-70 flex items-center gap-1"
                       >
                         <ThumbsUp size={14} />
                         全て良好
@@ -927,7 +927,7 @@
                                 onClick={() => handleCheckItem(section.title, item, isGood ? null : 'good')}
                                 className={`p-2 rounded-lg transition-colors ${
                                   isGood 
-                                    ? 'bg-green-500 text-white' 
+                                    ? 'bg-slate-600 text-white' 
                                     : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
                                 }`}
                               >
@@ -937,7 +937,7 @@
                                 onClick={() => handleCheckItem(section.title, item, isBad ? null : 'bad')}
                                 className={`p-2 rounded-lg transition-colors ${
                                   isBad 
-                                    ? 'bg-red-500 text-white' 
+                                    ? 'bg-slate-700 text-white ring-2 ring-slate-400' 
                                     : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
                                 }`}
                               >
@@ -978,7 +978,7 @@
               <div className="mb-6">
                 <button
                   onClick={handleSaveClick}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-semibold transition-colors active:opacity-70 flex items-center justify-center gap-2"
+                  className="w-full bg-slate-600 hover:bg-slate-500 text-white py-4 rounded-xl font-semibold transition-colors active:opacity-70 flex items-center justify-center gap-2"
                 >
                   <Download size={24} />
                   保存形式を選択
@@ -1003,7 +1003,7 @@
                       <Home className="text-white" size={28} />
                     </button>
                     <button
-                      className="p-4 bg-blue-500 hover:bg-blue-600 rounded-xl transition-colors active:opacity-70"
+                      className="p-4 bg-slate-600 hover:bg-slate-500 rounded-xl transition-colors active:opacity-70"
                       onClick={() => {
                         alert('点検完了！');
                         navigateToPage('vehicle-select');
@@ -1037,11 +1037,11 @@
                       onClick={() => toggleFormat('spreadsheet')}
                       className={`w-full py-4 rounded-xl font-medium transition-colors flex items-center justify-between px-4 ${
                         selectedFormats.includes('spreadsheet')
-                          ? 'bg-blue-500 text-white'
+                          ? 'bg-slate-600 text-white ring-2 ring-slate-400'
                           : 'bg-gray-700 text-white hover:bg-gray-600'
                       }`}
                     >
-                      <span>📊 Google Spreadsheet</span>
+                      <span>Google Spreadsheet</span>
                       {selectedFormats.includes('spreadsheet') && (
                         <CheckSquare size={20} />
                       )}
@@ -1051,11 +1051,11 @@
                       onClick={() => toggleFormat('excel')}
                       className={`w-full py-4 rounded-xl font-medium transition-colors flex items-center justify-between px-4 ${
                         selectedFormats.includes('excel')
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-slate-600 text-white ring-2 ring-slate-400'
                           : 'bg-gray-700 text-white hover:bg-gray-600'
                       }`}
                     >
-                      <span>📗 EXCEL (.xlsx)</span>
+                      <span>EXCEL (.xlsx)</span>
                       {selectedFormats.includes('excel') && (
                         <CheckSquare size={20} />
                       )}
@@ -1065,11 +1065,11 @@
                       onClick={() => toggleFormat('pdf')}
                       className={`w-full py-4 rounded-xl font-medium transition-colors flex items-center justify-between px-4 ${
                         selectedFormats.includes('pdf')
-                          ? 'bg-red-500 text-white'
+                          ? 'bg-slate-600 text-white ring-2 ring-slate-400'
                           : 'bg-gray-700 text-white hover:bg-gray-600'
                       }`}
                     >
-                      <span>📕 PDF</span>
+                      <span>PDF</span>
                       {selectedFormats.includes('pdf') && (
                         <CheckSquare size={20} />
                       )}
@@ -1078,7 +1078,7 @@
 
                   <div className="space-y-3">
                     <button
-                      className={`w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 ${
+                      className={`w-full bg-slate-600 hover:bg-slate-500 text-white py-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 ${
                         isSaving || selectedFormats.length === 0 ? 'opacity-50 cursor-not-allowed' : 'active:opacity-70'
                       }`}
                       onClick={handleSaveChecklist}
@@ -1097,8 +1097,8 @@
                   </div>
                   
                   {selectedFormats.length === 0 && (
-                    <p className="text-red-400 text-xs text-center mt-3">
-                      ※ 1つ以上の形式を選択してください
+                    <p className="text-amber-400 text-xs text-center mt-3">
+                      1つ以上の形式を選択してください
                     </p>
                   )}
                 </div>
@@ -1160,7 +1160,7 @@
                     <div
                       className={`rounded-2xl w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shadow-lg transition-colors relative ${
                         isSelected
-                          ? 'bg-blue-500 ring-4 ring-blue-300'
+                          ? 'bg-slate-600 ring-4 ring-slate-400'
                           : isCompleted
                           ? 'bg-gray-600 opacity-50'
                           : 'bg-gray-700'
@@ -1168,7 +1168,7 @@
                     >
                       <VehicleIcon className="text-white" size={36} />
                       {isCompleted && (
-                        <div className="absolute top-0 right-0 bg-green-500 rounded-full w-5 h-5 flex items-center justify-center text-white text-xs font-bold">
+                        <div className="absolute top-0 right-0 bg-slate-600 rounded-full w-5 h-5 flex items-center justify-center text-white text-xs font-bold">
                           ✓
                         </div>
                       )}
@@ -1204,7 +1204,7 @@
                         <Home className="text-white" size={28} />
                       </button>
                       <button
-                        className="p-4 bg-blue-500 hover:bg-blue-600 rounded-xl transition-colors active:opacity-70"
+                        className="p-4 bg-slate-600 hover:bg-slate-500 rounded-xl transition-colors active:opacity-70"
                         onClick={handleNext}
                       >
                         <ChevronRight className="text-white" size={28} />
