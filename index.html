@@ -89,7 +89,7 @@
     // ========================================
     // 🔧 ここにGoogleスプレッドシートのウェブアプリURLを貼り付けてください
     // ========================================
-    const SPREADSHEET_URL = 'https://script.google.com/macros/s/AKfycbyMWvJ1q_-kjWxh5hyShEibyAo49AXf9ouMLLnRgsfgOj9W9Nvg1S7Z1GCqfinzGLuA/exec';
+    const SPREADSHEET_URL = 'https://script.google.com/macros/s/AKfycbykezA3GkukkBPNF-f56McvDUBgTXR5nA8fXtNuUWNNchxcFtzmK0JmGgY7h9plzHMnUA/exec';
     // ========================================
 
     const ClipboardCheck = ({ size = 24, className = "" }) => (
@@ -597,11 +597,11 @@
             let downloadMessage = '';
             if (result.exports) {
               if (result.exports.excelUrl) {
-                downloadMessage += `\n\n📗 Excel: クリックしてダウンロード`;
+                downloadMessage += `\n\n📗 Excel: 自動的に開きます`;
                 setTimeout(() => window.open(result.exports.excelUrl, '_blank'), 500);
               }
               if (result.exports.pdfUrl) {
-                downloadMessage += `\n📕 PDF: クリックしてダウンロード`;
+                downloadMessage += `\n📕 PDF: 自動的に開きます`;
                 setTimeout(() => window.open(result.exports.pdfUrl, '_blank'), 1000);
               }
             }
