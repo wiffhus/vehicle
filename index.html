@@ -894,7 +894,7 @@
                             handleCheckItem(section.title, item, 'good');
                           });
                         }}
-                        className="px-3 py-1 bg-slate-600 hover:bg-slate-500 text-white text-xs rounded-lg transition-colors active:opacity-70 flex items-center gap-1"
+                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg transition-colors active:opacity-70 flex items-center gap-1"
                       >
                         <ThumbsUp size={14} />
                         全て良好
@@ -927,7 +927,7 @@
                                 onClick={() => handleCheckItem(section.title, item, isGood ? null : 'good')}
                                 className={`p-2 rounded-lg transition-colors ${
                                   isGood 
-                                    ? 'bg-slate-600 text-white' 
+                                    ? 'bg-emerald-600 text-white shadow-lg' 
                                     : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
                                 }`}
                               >
@@ -937,7 +937,7 @@
                                 onClick={() => handleCheckItem(section.title, item, isBad ? null : 'bad')}
                                 className={`p-2 rounded-lg transition-colors ${
                                   isBad 
-                                    ? 'bg-slate-700 text-white ring-2 ring-slate-400' 
+                                    ? 'bg-rose-600 text-white shadow-lg' 
                                     : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
                                 }`}
                               >
