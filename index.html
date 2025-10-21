@@ -574,14 +574,35 @@
           
           if (result.status === 'success') {
             let downloadMessage = '';
+            
+            // Excel/PDFファイルを直接ダウンロード
             if (result.exports) {
               if (result.exports.excelUrl) {
-                downloadMessage += `\n\n📗 Excel: 自動的に開きます`;
-                setTimeout(() => window.open(result.exports.excelUrl, '_blank'), 500);
+                downloadMessage += `\n\n📗 Excel: ダウンロード中...`;
+                // 直接ダウンロードリンクを使用
+                setTimeout(() => {
+                  const link = document.createElement('a');
+                  link.href = result.exports.excelUrl;
+                  link.download = `車両点検_${currentVehicleName}_${new Date().getTime()}.xlsx`;
+                  link.target = '_blank';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }, 500);
               }
+              
               if (result.exports.pdfUrl) {
-                downloadMessage += `\n📕 PDF: 自動的に開きます`;
-                setTimeout(() => window.open(result.exports.pdfUrl, '_blank'), 1000);
+                downloadMessage += `\n📕 PDF: ダウンロード中...`;
+                // 直接ダウンロードリンクを使用
+                setTimeout(() => {
+                  const link = document.createElement('a');
+                  link.href = result.exports.pdfUrl;
+                  link.download = `車両点検_${currentVehicleName}_${new Date().getTime()}.pdf`;
+                  link.target = '_blank';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }, 1000);
               }
             }
 
@@ -617,7 +638,7 @@
             if (selectedFormats.includes('excel')) formatsList.push('📗 EXCEL');
             if (selectedFormats.includes('pdf')) formatsList.push('📕 PDF');
             
-            alert(`✅ 車両 ${currentVehicleName} の点検データを保存しました！\n\n保存形式: ${formatsList.join(', ')}${downloadMessage}\n\n※ ポップアップブロックを許可してください`);
+            alert(`✅ 車両 ${currentVehicleName} の点検データを保存しました！\n\n保存形式: ${formatsList.join(', ')}${downloadMessage}\n\n※ ファイルは自動的にダウンロードされます\n※ ブラウザのダウンロードフォルダを確認してください`);
             navigateToPage('vehicle-select');
           } else {
             throw new Error(result.message || '保存に失敗しました');
